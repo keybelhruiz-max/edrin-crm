@@ -7,6 +7,13 @@ type PaymentStatus = "PENDIENTE" | "PAGADO" | "PARCIAL" | "CANCELADO";
 type InvoiceType = "NCF" | "PROFORMA" | "RECIBO";
 type Currency = "USD" | "DOP";
 type Tab = "cliente" | "proveedor" | "gastos" | "creditos";
+
+interface PayLog {
+  id: string; entityType: string; entityId: string; action: string;
+  fromValue: string | null; toValue: string | null; notes: string | null;
+  user: { id: string; name: string } | null;
+  createdAt: string;
+}
 type Category = "NOMINA" | "OFICINA" | "MARKETING" | "SOFTWARE" | "VIAJES" | "PROVEEDOR" | "IMPUESTO" | "OTRO";
 type PaymentMethod = "EFECTIVO" | "TRANSFERENCIA" | "TARJETA" | "CHEQUE";
 type CreditStatus = "PENDIENTE" | "COBRADO" | "CANCELADO";
@@ -80,6 +87,7 @@ function ClienteTab() {
   const [filter, setFilter] = useState<"ALL" | PaymentStatus>("ALL");
   const [showModal, setShowModal] = useState(false);
   const [selected, setSelected] = useState<Invoice | null>(null);
+  const [payHistory, setPayHistory] = useState<PayLog[]>([]);
   const [form, setForm] = useState({
     clientName: "", clientEmail: "", clientPhone: "",
     type: "PROFORMA" as InvoiceType, currency: "DOP" as Currency,
@@ -189,7 +197,7 @@ function ClienteTab() {
                     const costOrders = (inv.supplierOrders ?? []).filter(o => o.currency === inv.currency);
                     const cost = costOrders.reduce((s, o) => s + o.amount, 0);
                     return (
-                      <tr key={inv.id} onClick={() => setSelected(inv)}
+                      <tr key={inv.id} onClick={async () => { setSelected(inv); const r = await fetch(`/api/payment-logs?entityId=${inv.id}&entityType=INVOICE`); if (r.ok) setPayHistory(await r.json()); }}
                         className="border-t cursor-pointer hover:bg-orange-50/30 transition"
                         style={{ borderColor: "var(--border)", background: i % 2 === 0 ? "var(--surface)" : "var(--surface-2)" }}>
                         <td className="px-4 py-3 text-xs font-mono" style={{ color: "var(--text-muted)" }}>{inv.number}</td>
@@ -417,6 +425,25 @@ function ClienteTab() {
                   </button>
                 ))}
               </div>
+              {/* Payment history */}
+              {payHistory.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs font-semibold mb-2" style={{ color: "var(--text-muted)" }}>📋 Historial de cambios</div>
+                  <div className="space-y-1">
+                    {payHistory.map(log => (
+                      <div key={log.id} className="flex items-center justify-between text-xs px-3 py-1.5 rounded-xl" style={{ background: "var(--bg)" }}>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: "var(--text-muted)" }}>
+                            {log.fromValue && log.toValue ? `${log.fromValue} → ${log.toValue}` : log.action}
+                          </span>
+                          {log.user && <span className="font-semibold px-1.5 py-0.5 rounded-lg" style={{ background: "#FFF4EE", color: "#E8610A" }}>{log.user.name}</span>}
+                        </div>
+                        <span style={{ color: "var(--text-subtle)" }}>{new Date(log.createdAt).toLocaleString("es-DO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

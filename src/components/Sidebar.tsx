@@ -9,6 +9,7 @@ const nav = [
   { href: "/pipeline", label: "Pipeline", icon: "⬡" },
   { href: "/leads", label: "Leads", icon: "◎" },
   { href: "/facturas", label: "Facturas", icon: "≡" },
+  { href: "/tareas", label: "Tareas", icon: "☑" },
   { href: "/comisiones", label: "Comisiones", icon: "◈" },
 ];
 
@@ -24,6 +25,7 @@ const marketingNav = [
 
 const adminNav = [
   { href: "/ajustes/pipeline", label: "Etapas pipeline", icon: "◧" },
+  { href: "/ajustes/metodos-pago", label: "Métodos de pago", icon: "💳" },
   { href: "/ajustes/comisiones", label: "Comisiones", icon: "◩" },
   { href: "/ajustes/terminos", label: "Términos", icon: "◪" },
   { href: "/ajustes/integraciones", label: "Integraciones", icon: "⟴" },
@@ -34,7 +36,7 @@ const mobileNav = [
   { href: "/pipeline", label: "Pipeline", icon: "⬡" },
   { href: "/leads", label: "Leads", icon: "◎" },
   { href: "/facturas", label: "Facturas", icon: "≡" },
-  { href: "/marketing", label: "Marketing", icon: "✦" },
+  { href: "/tareas", label: "Tareas", icon: "☑" },
   { href: "/ai", label: "AI", icon: "✧" },
 ];
 

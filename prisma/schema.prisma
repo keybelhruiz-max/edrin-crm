@@ -26,6 +26,9 @@ model User {
   invoices         Invoice[]
   interactions     Interaction[]
   commissionRate   CommissionRate?
+  tasksAssigned    Task[]           @relation("TaskAssignee")
+  tasksCreated     Task[]           @relation("TaskCreator")
+  paymentLogs      PaymentLog[]
 }
 
 // ─── Commission Rates ─────────────────────────────────────────────────────────
@@ -112,6 +115,7 @@ model Contact {
 
   interactions  Interaction[]
   opportunities Opportunity[]
+  tasks         Task[]
 }
 
 enum Channel {
@@ -124,15 +128,16 @@ enum Channel {
 }
 
 model Interaction {
-  id        String   @id @default(cuid())
-  contactId String
-  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  channel   Channel
-  content   String
-  sentBy    String?
-  agentId   String?
-  agent     User?    @relation(fields: [agentId], references: [id])
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  contactId  String
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  channel    Channel
+  content    String
+  sentBy     String?
+  isInternal Boolean  @default(false)   // true = nota interna (no llega al cliente)
+  agentId    String?
+  agent      User?    @relation(fields: [agentId], references: [id])
+  createdAt  DateTime @default(now())
 }
 
 // ─── Opportunities / Pipeline ─────────────────────────────────────────────────
@@ -162,6 +167,7 @@ model Opportunity {
 
   quotes   Quote[]
   invoices Invoice[]
+  tasks    Task[]
 }
 
 enum Currency {
@@ -515,6 +521,59 @@ model Credit {
   dueDate     DateTime?
   paidAt      DateTime?
   notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Tasks & Reminders ────────────────────────────────────────────────────────
+
+model Task {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  contactId     String?
+  contact       Contact?     @relation(fields: [contactId], references: [id])
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  assignedTo    String?
+  assignee      User?        @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  createdBy     String?
+  creator       User?        @relation("TaskCreator", fields: [createdBy], references: [id])
+  dueDate       DateTime?
+  reminderAt    DateTime?
+  priority      String       @default("NORMAL")  // LOW | NORMAL | HIGH | URGENT
+  status        String       @default("PENDIENTE") // PENDIENTE | EN_PROGRESO | COMPLETADA | CANCELADA
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+// ─── Payment Audit Log ────────────────────────────────────────────────────────
+
+model PaymentLog {
+  id          String   @id @default(cuid())
+  entityType  String   // INVOICE | SUPPLIER_ORDER | CREDIT | EXPENSE
+  entityId    String
+  action      String   // STATUS_CHANGED | CREATED | UPDATED | DELETED
+  fromValue   String?
+  toValue     String?
+  notes       String?
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// ─── Configurable Payment Methods ─────────────────────────────────────────────
+
+model PaymentMethodConfig {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("TRANSFERENCIA") // EFECTIVO | TRANSFERENCIA | TARJETA | CHEQUE | OTRO
+  bankName    String?
+  accountNum  String?
+  description String?
+  currency    String   @default("DOP")
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

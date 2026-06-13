@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Stage = { id: string; name: string; color: string };
+type Interaction = {
+  id: string; contactId: string; channel: string; content: string;
+  sentBy: string | null; isInternal: boolean; agentId: string | null;
+  agent: { id: string; name: string } | null;
+  createdAt: string;
+};
 type Quote = {
   id: string;
   label: string;
@@ -294,8 +300,12 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
   const [stages, setStages] = useState<Stage[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [noteContent, setNoteContent] = useState("");
+  const [isInternalNote, setIsInternalNote] = useState(false);
+  const [sendingNote, setSendingNote] = useState(false);
 
   // Invoice form state (shown when stage = won)
   const [invoiceForm, setInvoiceForm] = useState({
@@ -316,8 +326,40 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
       setInvoices(oppData.invoices ?? []);
       setStages(stagesData);
       setInvoiceForm((f) => ({ ...f, clientName: oppData.contact?.name ?? "" }));
+      // Load interactions for this contact
+      if (oppData.contact?.id) {
+        fetch(`/api/interactions?contactId=${oppData.contact.id}`)
+          .then(r => r.ok ? r.json() : [])
+          .then(setInteractions);
+      }
     });
   }, [id]);
+
+  async function sendNote(e: React.FormEvent) {
+    e.preventDefault();
+    if (!noteContent.trim() || !opp) return;
+    setSendingNote(true);
+    const r = await fetch("/api/interactions", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contactId: opp.contact.id,
+        channel: opp.contact.channel,
+        content: noteContent.trim(),
+        isInternal: isInternalNote,
+      }),
+    });
+    if (r.ok) {
+      const newNote = await r.json();
+      setInteractions(prev => [...prev, newNote]);
+      setNoteContent("");
+    }
+    setSendingNote(false);
+  }
+
+  async function deleteInteraction(interactionId: string) {
+    await fetch(`/api/interactions/${interactionId}`, { method: "DELETE" });
+    setInteractions(prev => prev.filter(i => i.id !== interactionId));
+  }
 
   if (!opp) return <div className="p-8 text-gray-500">Cargando...</div>;
 
@@ -671,6 +713,64 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
                 {opp.contact.channel}
               </div>
             </div>
+          </section>
+
+          {/* Conversation / Internal notes timeline */}
+          <section>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Conversación / Notas</h3>
+            <div className="space-y-2 mb-3 max-h-72 overflow-y-auto">
+              {interactions.length === 0 && (
+                <div className="text-xs text-gray-400 text-center py-4 border border-dashed rounded-xl">Sin mensajes ni notas aún</div>
+              )}
+              {interactions.map(msg => (
+                <div key={msg.id} className={`rounded-xl p-3 text-sm relative group ${msg.isInternal ? "border-l-4" : ""}`}
+                  style={{
+                    background: msg.isInternal ? "#FFFBEB" : "#F0FDF4",
+                    borderLeftColor: msg.isInternal ? "#D97706" : undefined,
+                  }}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      {msg.isInternal && (
+                        <div className="text-xs font-semibold mb-1" style={{ color: "#D97706" }}>🔒 Nota interna — no visible al cliente</div>
+                      )}
+                      <p className="text-gray-800 text-sm">{msg.content}</p>
+                    </div>
+                    <button onClick={() => deleteInteraction(msg.id)}
+                      className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 transition shrink-0">✕</button>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {msg.agent && <span className="text-xs font-medium" style={{ color: "#E8610A" }}>{msg.agent.name}</span>}
+                    <span className="text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString("es-DO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Add note form */}
+            <form onSubmit={sendNote} className="space-y-2">
+              <div className="flex gap-2 mb-2">
+                <button type="button" onClick={() => setIsInternalNote(false)}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-medium border transition"
+                  style={{ background: !isInternalNote ? "#F0FDF4" : "white", color: !isInternalNote ? "#059669" : "#6B7280", borderColor: !isInternalNote ? "#86EFAC" : "#E5E7EB" }}>
+                  💬 Mensaje
+                </button>
+                <button type="button" onClick={() => setIsInternalNote(true)}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-medium border transition"
+                  style={{ background: isInternalNote ? "#FFFBEB" : "white", color: isInternalNote ? "#D97706" : "#6B7280", borderColor: isInternalNote ? "#FCD34D" : "#E5E7EB" }}>
+                  🔒 Nota interna
+                </button>
+              </div>
+              <textarea
+                value={noteContent} onChange={e => setNoteContent(e.target.value)}
+                rows={2} placeholder={isInternalNote ? "Nota solo visible para el equipo..." : "Mensaje o registro de interacción..."}
+                className="w-full border rounded-xl px-3 py-2 text-sm resize-none"
+                style={{ borderColor: isInternalNote ? "#FCD34D" : "#E5E7EB", background: isInternalNote ? "#FFFBEB" : "white" }}
+              />
+              <button type="submit" disabled={sendingNote || !noteContent.trim()}
+                className="w-full py-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-50"
+                style={{ background: isInternalNote ? "#D97706" : "#059669" }}>
+                {sendingNote ? "Guardando..." : isInternalNote ? "🔒 Guardar nota interna" : "💬 Guardar mensaje"}
+              </button>
+            </form>
           </section>
 
           {/* Invoices */}

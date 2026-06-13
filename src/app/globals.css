@@ -8,9 +8,10 @@
   --border: #E5E7EB;
   --text: #111827;
   --text-muted: #6B7280;
-  --sidebar-bg: #0F172A;
-  --sidebar-text: #94A3B8;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #6B7280;
   --sidebar-active: #E8610A;
+  --sidebar-border: #F0F0F0;
 }
 
 .dark {

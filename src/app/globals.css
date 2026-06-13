@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --brand: #E8610A;
+  --brand-dark: #c94f08;
+  --bg: #F8F9FB;
+  --surface: #ffffff;
+  --border: #E5E7EB;
+  --text: #111827;
+  --text-muted: #6B7280;
+  --sidebar-bg: #0F172A;
+  --sidebar-text: #94A3B8;
+  --sidebar-active: #E8610A;
+}
+
+.dark {
+  --bg: #0D1117;
+  --surface: #161B22;
+  --border: #30363D;
+  --text: #E6EDF3;
+  --text-muted: #7D8590;
+  --sidebar-bg: #010409;
+  --sidebar-text: #7D8590;
+  --sidebar-active: #E8610A;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans, system-ui, sans-serif);
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Focus ring */
+*:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }

@@ -1,0 +1,496 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(VENTAS)
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  accounts         Account[]
+  sessions         Session[]
+  leads            Contact[]        @relation("AssignedAgent")
+  opportunities    Opportunity[]
+  invoices         Invoice[]
+  interactions     Interaction[]
+  commissionRate   CommissionRate?
+}
+
+// ─── Commission Rates ─────────────────────────────────────────────────────────
+
+model CommissionRate {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rate       Float    @default(5)   // percentage 0-100
+  type       String   @default("AGENTE")  // AGENTE | REVENDEDOR
+  updatedAt  DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  VENTAS
+  CONTENIDO
+  CONTABLE
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Pipeline Stages (configurable by admin) ──────────────────────────────────
+
+model PipelineStage {
+  id            String        @id @default(cuid())
+  name          String
+  order         Int
+  color         String        @default("#E8610A")
+  isDefault     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  opportunities Opportunity[]
+}
+
+// ─── Leads / Contacts ────────────────────────────────────────────────────────
+
+model Contact {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  socialHandle String?
+  channel      Channel
+  tags         String   @default("[]")
+  notes        String?
+  agentId      String?
+  agent        User?    @relation("AssignedAgent", fields: [agentId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  interactions  Interaction[]
+  opportunities Opportunity[]
+}
+
+enum Channel {
+  WHATSAPP
+  INSTAGRAM
+  TIKTOK
+  MESSENGER
+  DIRECTO
+  OTRO
+}
+
+model Interaction {
+  id        String   @id @default(cuid())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  channel   Channel
+  content   String
+  sentBy    String?
+  agentId   String?
+  agent     User?    @relation(fields: [agentId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ─── Opportunities / Pipeline ─────────────────────────────────────────────────
+
+model Opportunity {
+  id             String        @id @default(cuid())
+  contactId      String
+  contact        Contact       @relation(fields: [contactId], references: [id])
+  stageId        String
+  stage          PipelineStage @relation(fields: [stageId], references: [id])
+  agentId        String?
+  agent          User?         @relation(fields: [agentId], references: [id])
+  destination    String?
+  mayorista      String?
+  travelStart    DateTime?
+  travelEnd      DateTime?
+  checkIn        DateTime?
+  checkOut       DateTime?
+  estimatedValue Float?
+  currency       Currency      @default(DOP)
+  isInternational Boolean     @default(false)
+  // International checklist (stored as JSON string of checked items)
+  intlChecklist  String        @default("{}")
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  quotes   Quote[]
+  invoices Invoice[]
+}
+
+enum Currency {
+  DOP
+  USD
+}
+
+// ─── Quotes ──────────────────────────────────────────────────────────────────
+
+enum QuoteTipo {
+  PLATAFORMA
+  BLOQUEO
+}
+
+model Quote {
+  id            String       @id @default(cuid())
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  label         String       @default("Cotización 1")
+  tipo          QuoteTipo    @default(PLATAFORMA)
+  mayorista     String
+  hotelName     String
+  description   String?
+  checkIn       DateTime?
+  checkOut      DateTime?
+  nights        Int?
+  adults        Int          @default(1)
+  children      Int          @default(0)
+  costPrice     Float        // precio de costo al mayorista
+  salePrice     Float        // precio de venta al cliente
+  currency      Currency     @default(USD)
+  exchangeRate  Float        @default(62)
+  isSelected    Boolean      @default(false)
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+// ─── Invoices (Clientes) ──────────────────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(cuid())
+  number        String        @unique
+  type          InvoiceType   @default(PROFORMA)
+  ncfNumber     String?
+  ncfType       String?
+  opportunityId String?
+  opportunity   Opportunity?  @relation(fields: [opportunityId], references: [id])
+  clientName    String
+  clientRnc     String?
+  clientEmail   String?
+  clientPhone   String?
+  currency      Currency      @default(DOP)
+  exchangeRate  Float         @default(62)
+  subtotal      Float
+  itbis         Float         @default(0)
+  total         Float
+  status        PaymentStatus @default(PENDIENTE)
+  paidAt        DateTime?
+  notes         String?
+  agentId       String?
+  agent         User?         @relation(fields: [agentId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items          InvoiceItem[]
+  supplierOrders SupplierOrder[]
+}
+
+enum InvoiceType {
+  NCF
+  PROFORMA
+  RECIBO
+}
+
+enum PaymentStatus {
+  PENDIENTE
+  PAGADO
+  PARCIAL
+  CANCELADO
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Float
+  total       Float
+}
+
+// ─── Supplier Orders (Mayoristas) ────────────────────────────────────────────
+
+model SupplierOrder {
+  id          String        @id @default(cuid())
+  invoiceId   String?
+  invoice     Invoice?      @relation(fields: [invoiceId], references: [id])
+  mayorista   String
+  description String
+  amount      Float
+  currency    Currency      @default(DOP)
+  status      PaymentStatus @default(PENDIENTE)
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// ─── Group Blocks ─────────────────────────────────────────────────────────────
+
+model GroupBlock {
+  id              String     @id @default(cuid())
+  name            String
+  hotel           String
+  mayorista       String
+  destination     String
+  checkIn         DateTime
+  checkOut        DateTime
+  totalRooms      Int
+  soldRooms       Int        @default(0)
+  paymentDeadline DateTime?
+  pricePerPax     Float
+  currency        Currency   @default(DOP)
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  passengers GroupPassenger[]
+}
+
+model GroupPassenger {
+  id           String     @id @default(cuid())
+  groupBlockId String
+  groupBlock   GroupBlock @relation(fields: [groupBlockId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String?
+  email        String?
+  roomType     String?
+  amountPaid   Float      @default(0)
+  totalDue     Float
+  notes        String?
+  createdAt    DateTime   @default(now())
+}
+
+// ─── App Config ───────────────────────────────────────────────────────────────
+
+model AppConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MARKETING & GROWTH HUB
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ─── Social Accounts ─────────────────────────────────────────────────────────
+
+model SocialAccount {
+  id           String   @id @default(cuid())
+  platform     String   // INSTAGRAM | FACEBOOK | TIKTOK | WHATSAPP | YOUTUBE | LINKEDIN
+  accountName  String
+  accountId    String?
+  accessToken  String?
+  status       String   @default("PENDING") // CONNECTED | PENDING | DISCONNECTED | ERROR
+  avatarUrl    String?
+  followers    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  posts        PostDraft[]
+  metrics      SocialMetric[]
+}
+
+// ─── Media Library ────────────────────────────────────────────────────────────
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // IMAGE | VIDEO | TEMPLATE | LOGO | GRAPHIC
+  url         String
+  size        Int?
+  width       Int?
+  height      Int?
+  duration    Int?     // seconds, for video
+  tags        String   @default("[]") // JSON array of strings
+  notes       String?
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+}
+
+// ─── Post Drafts & Schedule ───────────────────────────────────────────────────
+
+model PostDraft {
+  id              String         @id @default(cuid())
+  socialAccountId String?
+  socialAccount   SocialAccount? @relation(fields: [socialAccountId], references: [id])
+  platform        String         // INSTAGRAM | FACEBOOK | TIKTOK
+  postType        String         // POST | REEL | STORY | CAROUSEL | VIDEO
+  caption         String?
+  mediaUrls       String         @default("[]") // JSON array
+  hashtags        String?
+  status          String         @default("DRAFT") // DRAFT | SCHEDULED | PUBLISHED | FAILED
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  collaborators   String         @default("[]") // JSON array of @handles
+  campaignId      String?
+  campaign        Campaign?      @relation(fields: [campaignId], references: [id])
+  // Metrics after publishing
+  reach           Int?
+  impressions     Int?
+  engagement      Int?
+  likes           Int?
+  comments        Int?
+  shares          Int?
+  saves           Int?
+  leadsGenerated  Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+// ─── Automation Rules ─────────────────────────────────────────────────────────
+
+model AutomationRule {
+  id          String   @id @default(cuid())
+  name        String
+  active      Boolean  @default(true)
+  platform    String   // INSTAGRAM | FACEBOOK | TIKTOK | WHATSAPP | ALL
+  trigger     String   // COMMENT | DM | KEYWORD | NEW_FOLLOWER | FORM_SUBMIT
+  conditions  String   // JSON: { keywords: [], matchType: "ANY"|"ALL", contentType: "COMMENT"|"DM" }
+  actions     String   // JSON array: [{ type: "REPLY_COMMENT"|"SEND_DM"|"CREATE_LEAD"|"TAG_LEAD"|"ASSIGN_AGENT"|"CREATE_TASK", payload: {} }]
+  executions  Int      @default(0)
+  lastRun     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  logs        AutomationLog[]
+}
+
+model AutomationLog {
+  id           String         @id @default(cuid())
+  ruleId       String
+  rule         AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  triggeredBy  String?        // comment text / dm excerpt
+  platform     String
+  actionsRun   String         // JSON array of executed actions
+  leadCreated  Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+}
+
+// ─── Campaigns (Ads) ─────────────────────────────────────────────────────────
+
+model Campaign {
+  id             String   @id @default(cuid())
+  name           String
+  platform       String   // META | TIKTOK | GOOGLE | MANUAL
+  externalId     String?  // platform campaign ID
+  status         String   @default("ACTIVE") // ACTIVE | PAUSED | ENDED | DRAFT
+  objective      String?  // LEADS | REACH | TRAFFIC | CONVERSIONS
+  startDate      DateTime?
+  endDate        DateTime?
+  budget         Float    @default(0)
+  currency       String   @default("USD")
+  // Metrics (updated via API or manual)
+  spent          Float    @default(0)
+  reach          Int      @default(0)
+  impressions    Int      @default(0)
+  clicks         Int      @default(0)
+  leads          Int      @default(0)
+  conversions    Int      @default(0)
+  revenue        Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  posts          PostDraft[]
+  leadSources    CampaignLead[]
+}
+
+model CampaignLead {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  contactId   String?
+  source      String   // COMMENT | DM | FORM | META_LEAD_FORM | WHATSAPP
+  platform    String
+  createdAt   DateTime @default(now())
+}
+
+// ─── Social Metrics (daily snapshots) ────────────────────────────────────────
+
+model SocialMetric {
+  id              String         @id @default(cuid())
+  socialAccountId String
+  socialAccount   SocialAccount  @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  date            DateTime
+  followers       Int            @default(0)
+  reach           Int            @default(0)
+  impressions     Int            @default(0)
+  engagement      Int            @default(0)
+  profileViews    Int            @default(0)
+  createdAt       DateTime       @default(now())
+
+  @@unique([socialAccountId, date])
+}
+
+// ─── Sales Goals ─────────────────────────────────────────────────────────────
+
+model SalesGoal {
+  id        String   @id @default(cuid())
+  month     String   // "2026-06"
+  userId    String?  // null = team goal
+  target    Float
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([month, userId])
+}
+
+// ─── AI Conversations ─────────────────────────────────────────────────────────
+
+model AiConversation {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String?
+  messages  String    // JSON array of {role, content}
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}

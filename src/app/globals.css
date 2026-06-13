@@ -48,7 +48,9 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-geist-sans, system-ui, -apple-system, sans-serif);
+  font-family: var(--font-inter, "Inter", system-ui, -apple-system, sans-serif);
+  font-feature-settings: "cv02","cv03","cv04","cv11";
+  letter-spacing: -0.01em;
   transition: background 0.2s, color 0.2s;
   -webkit-font-smoothing: antialiased;
 }

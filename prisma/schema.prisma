@@ -50,6 +50,9 @@ model Agency {
   mediaAssets          MediaAsset[]
   appConfigs           AppConfig[]
   aiConversations      AiConversation[]
+  budgetItems          BudgetItem[]
+  workflowDefs         WorkflowDef[]
+  securityLogs         SecurityLog[]
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -77,6 +80,7 @@ model User {
   tasksAssigned    Task[]           @relation("TaskAssignee")
   tasksCreated     Task[]           @relation("TaskCreator")
   paymentLogs      PaymentLog[]
+  securityLogs     SecurityLog[]
 }
 
 model CommissionRate {
@@ -665,4 +669,64 @@ model AiConversation {
   messages  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+// ─── Annual Budget ─────────────────────────────────────────────────────────────
+
+model BudgetItem {
+  id        String   @id @default(cuid())
+  agencyId  String?
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+  year      Int
+  month     Int      // 1-12
+  category  String   // VENTAS | MARKETING | OPERACION | COMISIONES | OTRO
+  label     String?
+  target    Float    @default(0)
+  currency  String   @default("DOP")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([agencyId, year, month, category])
+}
+
+// ─── Visual Workflows ─────────────────────────────────────────────────────────
+
+model WorkflowDef {
+  id          String   @id @default(cuid())
+  agencyId    String?
+  agency      Agency?  @relation(fields: [agencyId], references: [id])
+  name        String
+  description String?
+  trigger     String   @default("LEAD_CREATED") // LEAD_CREATED | STAGE_CHANGED | INVOICE_PAID | MANUAL
+  nodes       String   @default("[]")           // JSON array of WorkflowNode
+  edges       String   @default("[]")           // JSON array of connections
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Security Logs ────────────────────────────────────────────────────────────
+
+model SecurityLog {
+  id        String   @id @default(cuid())
+  agencyId  String?
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  event     String   // LOGIN_OK | LOGIN_FAIL | LOGOUT | SESSION_REVOKED | PASSWORD_CHANGED | 2FA_ENABLED
+  email     String?
+  ip        String?
+  userAgent String?
+  metadata  String?  // JSON
+  createdAt DateTime @default(now())
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
 }

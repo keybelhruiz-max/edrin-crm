@@ -111,6 +111,14 @@ export default function Sidebar({ agency }: { agency?: Agency }) {
           <NavItem href="/marketing/reportes" label="Reportes" icon="◳" />
           <NavItem href="/ai" label="Edrin AI" icon="✧" />
 
+          <div className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1.5" style={{ color: "#C4C4C4" }}>
+            Análisis
+          </div>
+          <NavItem href="/presupuesto" label="Presupuesto" icon="📊" />
+          <NavItem href="/metricas" label="Métricas" icon="📈" />
+          <NavItem href="/workflow" label="Workflow visual" icon="⟳" />
+          <NavItem href="/seguridad" label="Seguridad" icon="🔒" />
+
           {isAdmin && (
             <>
               <div className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1.5" style={{ color: "#C4C4C4" }}>

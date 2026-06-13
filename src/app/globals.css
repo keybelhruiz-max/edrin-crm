@@ -97,3 +97,49 @@ thead tr th:last-child { border-radius: 0 8px 0 0; }
 
 /* Smooth transitions */
 a, button { transition: background 0.15s, color 0.15s, opacity 0.15s, box-shadow 0.15s; }
+
+/* ── Mobile global fixes ─────────────────────────────── */
+@media (max-width: 767px) {
+  /* Prevent horizontal overflow */
+  body { overflow-x: hidden; }
+
+  /* Page padding: tighter on mobile */
+  .p-6 { padding: 1rem !important; }
+  .p-8 { padding: 1rem !important; }
+  .px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .py-8 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+  .max-w-6xl, .max-w-7xl, .max-w-5xl { max-width: 100% !important; }
+
+  /* Collapse multi-column grids to 1 col on mobile */
+  .grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+  .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .grid-cols-5,
+  .grid-cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  /* Tables: scroll horizontally */
+  .card table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+
+  /* Typography scale down on small screens */
+  .text-3xl { font-size: 1.5rem !important; }
+  .text-4xl { font-size: 1.75rem !important; }
+
+  /* Modals: full width */
+  .w-\[480px\], .w-96 { width: calc(100vw - 2rem) !important; max-width: 100% !important; }
+
+  /* Gaps: tighten on mobile */
+  .gap-6 { gap: 0.75rem !important; }
+  .gap-8 { gap: 1rem !important; }
+
+  /* Space above bottom nav */
+  main { padding-bottom: 5rem !important; }
+
+  /* Hide scrollbar on mobile tables */
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .grid-cols-5,
+  .grid-cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "./ThemeProvider";
 
@@ -18,7 +19,16 @@ const mobileNav = [
   { href: "/leads", label: "Leads", icon: "◎" },
   { href: "/facturas", label: "Facturas", icon: "≡" },
   { href: "/tareas", label: "Tareas", icon: "☑" },
-  { href: "/ai", label: "AI", icon: "✧" },
+];
+
+const mobileMore = [
+  { href: "/comisiones", label: "Comisiones", icon: "◈" },
+  { href: "/marketing", label: "Marketing", icon: "✦" },
+  { href: "/ai", label: "Edrin AI", icon: "✧" },
+  { href: "/presupuesto", label: "Presupuesto", icon: "📊" },
+  { href: "/metricas", label: "Métricas", icon: "📈" },
+  { href: "/workflow", label: "Workflow", icon: "⟳" },
+  { href: "/seguridad", label: "Seguridad", icon: "🔒" },
 ];
 
 const adminNav = [

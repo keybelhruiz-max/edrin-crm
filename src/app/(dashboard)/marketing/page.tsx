@@ -67,7 +67,7 @@ export default function MarketingPage() {
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 md:py-8">
         <PageHeader
           title="Marketing & Growth Hub"
           subtitle="Central de marketing integrado con el CRM"
@@ -81,22 +81,22 @@ export default function MarketingPage() {
         />
 
         {/* KPI strip */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           {[
             { label: "Facturado este mes", value: `$${(report.totalThisMonth ?? 0).toLocaleString("es-DO", { minimumFractionDigits: 2 })}`, sub: report.growth !== undefined ? `${report.growth >= 0 ? "+" : ""}${report.growth.toFixed(1)}% vs mes anterior` : "—", color: "var(--brand)" },
             { label: "Leads este mes", value: report.leadsThisMonth ?? "—", sub: `${report.oppsWon ?? 0} cerrados`, color: "#10b981" },
             { label: "Conversión", value: `${(report.conversionRate ?? 0).toFixed(1)}%`, sub: "Leads → Ventas", color: "#6366f1" },
             { label: "ROI Campañas", value: `${roi.toFixed(1)}%`, sub: `$${totalSpent.toFixed(0)} invertidos`, color: roi >= 0 ? "#10b981" : "#ef4444" },
           ].map(k => (
-            <Card key={k.label} className="text-center">
-              <div className="text-2xl font-black mb-1" style={{ color: k.color }}>{k.value}</div>
-              <div className="text-sm font-medium" style={{ color: "var(--text)" }}>{k.label}</div>
+            <Card key={k.label} className="text-center p-3 md:p-5">
+              <div className="text-xl md:text-2xl font-black mb-1" style={{ color: k.color }}>{k.value}</div>
+              <div className="text-xs md:text-sm font-medium" style={{ color: "var(--text)" }}>{k.label}</div>
               <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{k.sub}</div>
             </Card>
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           {/* Social accounts */}
           <Card>
             <div className="flex items-center justify-between mb-4">
@@ -168,7 +168,7 @@ export default function MarketingPage() {
         </div>
 
         {/* Stats bar */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3 md:gap-4">
           <Card className="text-center">
             <div className="text-3xl font-black mb-1" style={{ color: "var(--brand)" }}>{totalLeads}</div>
             <div className="text-sm" style={{ color: "var(--text)" }}>Leads de campañas</div>

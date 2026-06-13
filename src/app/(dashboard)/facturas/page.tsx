@@ -6,7 +6,26 @@ import { PageHeader } from "@/components/ui";
 type PaymentStatus = "PENDIENTE" | "PAGADO" | "PARCIAL" | "CANCELADO";
 type InvoiceType = "NCF" | "PROFORMA" | "RECIBO";
 type Currency = "USD" | "DOP";
-type Tab = "cliente" | "proveedor";
+type Tab = "cliente" | "proveedor" | "gastos";
+type Category = "NOMINA" | "OFICINA" | "MARKETING" | "SOFTWARE" | "VIAJES" | "PROVEEDOR" | "IMPUESTO" | "OTRO";
+type PaymentMethod = "EFECTIVO" | "TRANSFERENCIA" | "TARJETA" | "CHEQUE";
+
+interface Expense {
+  id: string; date: string; category: Category; description: string;
+  amount: number; currency: Currency; paymentMethod: PaymentMethod;
+  notes: string | null; createdAt: string;
+}
+
+const CAT_CONFIG: Record<Category, { label: string; color: string; bg: string; icon: string }> = {
+  NOMINA:    { label: "Nómina",     color: "#7C3AED", bg: "#F5F3FF", icon: "👥" },
+  OFICINA:   { label: "Oficina",    color: "#0891B2", bg: "#ECFEFF", icon: "🏢" },
+  MARKETING: { label: "Marketing",  color: "#DB2777", bg: "#FDF2F8", icon: "📣" },
+  SOFTWARE:  { label: "Software",   color: "#2563EB", bg: "#EFF6FF", icon: "💻" },
+  VIAJES:    { label: "Viajes",     color: "#059669", bg: "#ECFDF5", icon: "✈️" },
+  PROVEEDOR: { label: "Proveedor",  color: "#D97706", bg: "#FFFBEB", icon: "📦" },
+  IMPUESTO:  { label: "Impuestos",  color: "#DC2626", bg: "#FEF2F2", icon: "🏛️" },
+  OTRO:      { label: "Otro",       color: "#6B7280", bg: "#F9FAFB", icon: "📋" },
+};
 
 interface InvoiceItem { id: string; description: string; quantity: number; unitPrice: number; total: number; }
 interface Invoice {
@@ -593,33 +612,314 @@ function ProveedorTab() {
   );
 }
 
+// ── Gastos tab ────────────────────────────────────────────────────────────────
+function GastosTab() {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterCat, setFilterCat] = useState<"ALL" | Category>("ALL");
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    category: "OTRO" as Category,
+    description: "",
+    amount: "",
+    currency: "DOP" as Currency,
+    paymentMethod: "TRANSFERENCIA" as PaymentMethod,
+    notes: "",
+  });
+
+  async function load() {
+    setLoading(true);
+    const r = await fetch("/api/expenses");
+    if (r.ok) setExpenses(await r.json());
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  const filtered = filterCat === "ALL" ? expenses : expenses.filter(e => e.category === filterCat);
+  const totalDOP = expenses.filter(e => e.currency === "DOP").reduce((s, e) => s + e.amount, 0);
+  const totalUSD = expenses.filter(e => e.currency === "USD").reduce((s, e) => s + e.amount, 0);
+
+  // By category totals
+  const byCat = Object.keys(CAT_CONFIG).map(cat => ({
+    cat: cat as Category,
+    total: expenses.filter(e => e.category === cat && e.currency === "DOP").reduce((s, e) => s + e.amount, 0),
+    totalUSD: expenses.filter(e => e.category === cat && e.currency === "USD").reduce((s, e) => s + e.amount, 0),
+    count: expenses.filter(e => e.category === cat).length,
+  })).filter(c => c.count > 0);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    await fetch("/api/expenses", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form }),
+    });
+    setShowModal(false);
+    setForm({ date: new Date().toISOString().split("T")[0], category: "OTRO", description: "", amount: "", currency: "DOP", paymentMethod: "TRANSFERENCIA", notes: "" });
+    load();
+  }
+
+  async function deleteExpense(id: string) {
+    if (!confirm("¿Eliminar este gasto?")) return;
+    await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+    load();
+  }
+
+  return (
+    <>
+      {/* Summary */}
+      <div className="px-6 pt-4 pb-3 grid grid-cols-2 gap-3">
+        <div className="rounded-xl p-4 border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+          <div className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Total gastos (DOP)</div>
+          <div className="text-xl font-bold" style={{ color: "#DC2626" }}>{fmt(totalDOP, "DOP")}</div>
+        </div>
+        <div className="rounded-xl p-4 border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+          <div className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Total gastos (USD)</div>
+          <div className="text-xl font-bold" style={{ color: "#DC2626" }}>{fmt(totalUSD, "USD")}</div>
+        </div>
+      </div>
+
+      {/* Category breakdown */}
+      {byCat.length > 0 && (
+        <div className="px-6 pb-3">
+          <div className="rounded-xl border p-3 grid grid-cols-2 md:grid-cols-4 gap-2" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+            {byCat.map(c => {
+              const cfg = CAT_CONFIG[c.cat];
+              return (
+                <button key={c.cat} onClick={() => setFilterCat(filterCat === c.cat ? "ALL" : c.cat)}
+                  className="flex items-center gap-2 p-2 rounded-lg text-left transition"
+                  style={{ background: filterCat === c.cat ? cfg.bg : "transparent" }}>
+                  <span>{cfg.icon}</span>
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold truncate" style={{ color: cfg.color }}>{cfg.label}</div>
+                    <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {c.total > 0 && fmt(c.total, "DOP")}
+                      {c.totalUSD > 0 && ` · ${fmt(c.totalUSD, "USD")}`}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Filter + action */}
+      <div className="px-6 pb-3 flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setFilterCat("ALL")}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition"
+            style={{ background: filterCat === "ALL" ? "#E8610A" : "var(--surface)", color: filterCat === "ALL" ? "#fff" : "var(--text-muted)", borderColor: filterCat === "ALL" ? "#E8610A" : "var(--border)" }}>
+            Todos
+          </button>
+          {Object.entries(CAT_CONFIG).map(([cat, cfg]) => (
+            <button key={cat} onClick={() => setFilterCat(filterCat === cat as Category ? "ALL" : cat as Category)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition"
+              style={{ background: filterCat === cat ? cfg.color : "var(--surface)", color: filterCat === cat ? "#fff" : "var(--text-muted)", borderColor: filterCat === cat ? cfg.color : "var(--border)" }}>
+              {cfg.icon} {cfg.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => setShowModal(true)}
+          className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "#DC2626" }}>
+          + Registrar gasto
+        </button>
+      </div>
+
+      {/* List */}
+      <div className="px-6 pb-6 flex-1 overflow-auto">
+        {loading ? (
+          <div className="text-center py-16" style={{ color: "var(--text-muted)" }}>Cargando...</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-4xl mb-3">💸</div>
+            <p className="font-medium" style={{ color: "var(--text)" }}>No hay gastos registrados</p>
+            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>Registra el primer gasto con el botón de arriba</p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop */}
+            <div className="hidden md:block rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+              <table className="w-full">
+                <thead>
+                  <tr style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+                    {["Fecha", "Categoría", "Descripción", "Método pago", "Moneda", "Monto", ""].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold" style={{ color: "var(--text-muted)" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((exp, i) => {
+                    const cfg = CAT_CONFIG[exp.category];
+                    return (
+                      <tr key={exp.id} className="border-t"
+                        style={{ borderColor: "var(--border)", background: i % 2 === 0 ? "var(--surface)" : "transparent" }}>
+                        <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
+                          {new Date(exp.date).toLocaleDateString("es-DO")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ color: cfg.color, background: cfg.bg }}>
+                            {cfg.icon} {cfg.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm max-w-[200px] truncate" style={{ color: "var(--text)" }}>{exp.description}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>{exp.paymentMethod}</td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-0.5 rounded text-xs font-semibold"
+                            style={{ background: exp.currency === "USD" ? "#EFF6FF" : "#F0FDF4", color: exp.currency === "USD" ? "#1D4ED8" : "#166534" }}>
+                            {exp.currency}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-bold text-sm" style={{ color: "#DC2626" }}>{fmt(exp.amount, exp.currency)}</td>
+                        <td className="px-4 py-3">
+                          <button onClick={() => deleteExpense(exp.id)} className="text-xs hover:opacity-70 transition" style={{ color: "#DC2626" }}>🗑</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile */}
+            <div className="md:hidden space-y-2">
+              {filtered.map(exp => {
+                const cfg = CAT_CONFIG[exp.category];
+                return (
+                  <div key={exp.id} className="rounded-xl border p-4" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate" style={{ color: "var(--text)" }}>{exp.description}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ color: cfg.color, background: cfg.bg }}>
+                            {cfg.icon} {cfg.label}
+                          </span>
+                          <span className="text-xs" style={{ color: "var(--text-muted)" }}>{exp.paymentMethod}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => deleteExpense(exp.id)} className="ml-2 text-sm" style={{ color: "#DC2626" }}>🗑</button>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="font-bold" style={{ color: "#DC2626" }}>{fmt(exp.amount, exp.currency)}</div>
+                      <div className="text-xs" style={{ color: "var(--text-muted)" }}>{new Date(exp.date).toLocaleDateString("es-DO")}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Create modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)" }}>
+          <div className="w-full max-w-lg rounded-2xl p-6 overflow-y-auto max-h-[90vh]" style={{ background: "var(--surface)" }}>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="font-bold text-lg" style={{ color: "var(--text)" }}>Registrar gasto</h3>
+              <button onClick={() => setShowModal(false)} style={{ color: "var(--text-muted)" }}>✕</button>
+            </div>
+            <form onSubmit={handleCreate} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Fecha</label>
+                  <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Categoría *</label>
+                  <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}>
+                    {Object.entries(CAT_CONFIG).map(([cat, cfg]) => (
+                      <option key={cat} value={cat}>{cfg.icon} {cfg.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Descripción *</label>
+                <input required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}
+                  placeholder="Ej: Renta de oficina junio, Salario Maria..." />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Moneda</label>
+                  <select value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value as Currency }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}>
+                    <option value="DOP">🇩🇴 DOP</option>
+                    <option value="USD">🇺🇸 USD</option>
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Monto ({form.currency}) *</label>
+                  <input required value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
+                    type="number" step="0.01" className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Método de pago</label>
+                <select value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value as PaymentMethod }))}
+                  className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}>
+                  <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                  <option value="EFECTIVO">💵 Efectivo</option>
+                  <option value="TARJETA">💳 Tarjeta</option>
+                  <option value="CHEQUE">📄 Cheque</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Notas</label>
+                <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                  rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }} />
+              </div>
+
+              <div className="rounded-xl p-3 flex justify-between items-center" style={{ background: "#FEF2F2" }}>
+                <span className="text-sm font-medium" style={{ color: "#DC2626" }}>Total del gasto</span>
+                <span className="text-xl font-bold" style={{ color: "#DC2626" }}>
+                  {fmt(parseFloat(form.amount) || 0, form.currency)}
+                </span>
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setShowModal(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium border" style={{ borderColor: "var(--border)", color: "var(--text)" }}>Cancelar</button>
+                <button type="submit" className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: "#DC2626" }}>
+                  Registrar gasto
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function FacturasPage() {
   const [tab, setTab] = useState<Tab>("cliente");
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <PageHeader title="Facturación" subtitle="Facturas de clientes y pagos a proveedores" />
+      <PageHeader title="Facturación" subtitle="Facturas, pagos a proveedores y gastos de la empresa" />
 
       {/* Tabs */}
-      <div className="px-6 pt-4 flex gap-1 border-b shrink-0" style={{ borderColor: "var(--border)" }}>
+      <div className="px-6 pt-4 flex gap-1 border-b shrink-0 overflow-x-auto" style={{ borderColor: "var(--border)" }}>
         {([
-          { key: "cliente",   label: "🧑 Facturas a clientes",   color: "#E8610A" },
-          { key: "proveedor", label: "📦 Pagos a proveedores",    color: "#6366F1" },
+          { key: "cliente",   label: "🧑 Clientes",   color: "#E8610A" },
+          { key: "proveedor", label: "📦 Proveedores", color: "#6366F1" },
+          { key: "gastos",    label: "💸 Gastos",      color: "#DC2626" },
         ] as const).map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px"
-            style={{
-              borderColor: tab === t.key ? t.color : "transparent",
-              color: tab === t.key ? t.color : "var(--text-muted)",
-            }}>
+            className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px whitespace-nowrap"
+            style={{ borderColor: tab === t.key ? t.color : "transparent", color: tab === t.key ? t.color : "var(--text-muted)" }}>
             {t.label}
           </button>
         ))}
       </div>
 
       <div className="flex-1 overflow-auto flex flex-col">
-        {tab === "cliente" ? <ClienteTab /> : <ProveedorTab />}
+        {tab === "cliente" ? <ClienteTab /> : tab === "proveedor" ? <ProveedorTab /> : <GastosTab />}
       </div>
     </div>
   );

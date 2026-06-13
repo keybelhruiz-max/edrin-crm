@@ -99,7 +99,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       type: "financial", month,
       totalBilled: billed, totalPaid: paid, totalPending: pending,
-      totalOverdue: allInvoices.filter(i => i.status === "VENCIDO").reduce((s, i) => s + i.total, 0),
+      totalOverdue: allInvoices.filter(i => i.status === "CANCELADO").reduce((s, i) => s + i.total, 0),
       costs, grossMargin, annualBilled,
       byAgent: byAgentFormatted,
     });

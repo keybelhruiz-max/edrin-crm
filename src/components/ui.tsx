@@ -147,10 +147,12 @@ export function PageHeader({
   title,
   subtitle,
   children,
+  action,
 }: {
   title: string;
   subtitle?: string;
   children?: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <div
@@ -161,7 +163,7 @@ export function PageHeader({
         <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>{title}</h1>
         {subtitle && <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>{subtitle}</p>}
       </div>
-      {children && <div className="flex items-center gap-2">{children}</div>}
+      {(action || children) && <div className="flex items-center gap-2">{action}{children}</div>}
     </div>
   );
 }

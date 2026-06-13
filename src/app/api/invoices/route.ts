@@ -1,19 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAgencySession, agencyWhere, unauthorizedResponse } from "@/lib/agency";
 
-async function nextInvoiceNumber() {
-  const last = await prisma.invoice.findFirst({ orderBy: { createdAt: "desc" } });
+async function nextInvoiceNumber(agencyId: string | null) {
+  const last = await prisma.invoice.findFirst({
+    where: agencyId ? { agencyId } : {},
+    orderBy: { createdAt: "desc" },
+  });
   if (!last) return "INV-000001";
   const num = parseInt(last.number.replace("INV-", ""), 10) + 1;
   return `INV-${String(num).padStart(6, "0")}`;
 }
 
 export async function GET(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const { searchParams } = new URL(req.url);
   const opportunityId = searchParams.get("opportunityId");
   const includeOrders = searchParams.has("include") && searchParams.get("include")?.includes("supplierOrders");
   const invoices = await prisma.invoice.findMany({
-    where: opportunityId ? { opportunityId } : undefined,
+    where: {
+      ...agencyWhere(s),
+      ...(opportunityId ? { opportunityId } : {}),
+    },
     include: {
       items: true,
       ...(includeOrders ? { supplierOrders: true } : {}),
@@ -24,9 +33,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const body = await req.json();
 
-  // If quoteId provided, auto-fill from quote
   let salePrice = 0;
   let quoteCurrency: "USD" | "DOP" = "USD";
   let quoteRate = 62;
@@ -40,7 +50,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const number = await nextInvoiceNumber();
+  const number = await nextInvoiceNumber(s.agencyId || null);
   const subtotal = body.subtotal ?? salePrice;
   const itbis = body.itbis ?? 0;
   const total = body.total ?? subtotal + itbis;
@@ -48,6 +58,7 @@ export async function POST(req: Request) {
 
   const invoice = await prisma.invoice.create({
     data: {
+      agencyId: s.agencyId || null,
       number,
       type: body.type ?? "PROFORMA",
       ncfNumber: body.ncfNumber ?? null,

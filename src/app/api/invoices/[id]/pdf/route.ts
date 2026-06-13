@@ -24,8 +24,8 @@ export async function GET(
 
   // Load custom terms from config
   const [termsCfg, notesCfg] = await Promise.all([
-    prisma.appConfig.findUnique({ where: { key: "invoice_terms" } }),
-    prisma.appConfig.findUnique({ where: { key: "invoice_notes" } }),
+    prisma.appConfig.findFirst({ where: { key: "invoice_terms" } }),
+    prisma.appConfig.findFirst({ where: { key: "invoice_notes" } }),
   ]);
 
   const opp = invoice.opportunity as { checkOut?: Date | null; contact?: { name?: string }; destination?: string } | null;

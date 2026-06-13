@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAgencySession, agencyWhere, unauthorizedResponse } from "@/lib/agency";
 
 export async function GET(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const { searchParams } = new URL(req.url);
   const entityId = searchParams.get("entityId");
   const entityType = searchParams.get("entityType");
   const logs = await prisma.paymentLog.findMany({
     where: {
+      ...agencyWhere(s),
       ...(entityId ? { entityId } : {}),
       ...(entityType ? { entityType } : {}),
     },
@@ -18,10 +22,13 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const session = await auth();
   const body = await req.json();
   const log = await prisma.paymentLog.create({
     data: {
+      agencyId: s.agencyId || null,
       entityType: body.entityType,
       entityId: body.entityId,
       action: body.action,

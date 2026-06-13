@@ -36,9 +36,9 @@ async function main() {
   });
 
   await prisma.appConfig.upsert({
-    where: { key: "exchange_rate_usd_dop" },
+    where: { agencyId_key: { agencyId: "agency_default", key: "exchange_rate_usd_dop" } },
     update: {},
-    create: { key: "exchange_rate_usd_dop", value: "62" },
+    create: { agencyId: "agency_default", key: "exchange_rate_usd_dop", value: "62" },
   });
 
   console.log("✅ Seed completado");

@@ -6,10 +6,58 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
+// ─── Agency (Multi-tenant root) ───────────────────────────────────────────────
+
+model Agency {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  logoUrl         String?
+  primaryColor    String   @default("#E8610A")
+  secondaryColor  String   @default("#1A1A2E")
+  plan            String   @default("STARTER") // STARTER | PRO | ENTERPRISE
+  isActive        Boolean  @default(true)
+  // Billing / fiscal info
+  billingName     String?
+  billingRnc      String?
+  billingAddress  String?
+  billingEmail    String?
+  billingPhone    String?
+  // Exchange rates
+  exchangeRateDOP Float    @default(62)
+  exchangeRateUSD Float    @default(1)
+  // Mayoristas (JSON array of strings)
+  mayoristas      String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users                User[]
+  contacts             Contact[]
+  opportunities        Opportunity[]
+  invoices             Invoice[]
+  supplierOrders       SupplierOrder[]
+  groupBlocks          GroupBlock[]
+  tasks                Task[]
+  paymentLogs          PaymentLog[]
+  paymentMethodConfigs PaymentMethodConfig[]
+  pipelineStages       PipelineStage[]
+  credits              Credit[]
+  expenses             Expense[]
+  socialAccounts       SocialAccount[]
+  campaigns            Campaign[]
+  salesGoals           SalesGoal[]
+  automationRules      AutomationRule[]
+  mediaAssets          MediaAsset[]
+  appConfigs           AppConfig[]
+  aiConversations      AiConversation[]
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 model User {
   id            String    @id @default(cuid())
+  agencyId      String?
+  agency        Agency?   @relation(fields: [agencyId], references: [id])
   name          String?
   email         String    @unique
   emailVerified DateTime?
@@ -31,18 +79,17 @@ model User {
   paymentLogs      PaymentLog[]
 }
 
-// ─── Commission Rates ─────────────────────────────────────────────────────────
-
 model CommissionRate {
   id         String   @id @default(cuid())
   userId     String   @unique
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rate       Float    @default(5)   // percentage 0-100
-  type       String   @default("AGENTE")  // AGENTE | REVENDEDOR
+  rate       Float    @default(5)
+  type       String   @default("AGENTE")
   updatedAt  DateTime @updatedAt
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   VENTAS
   CONTENIDO
@@ -83,10 +130,12 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ─── Pipeline Stages (configurable by admin) ──────────────────────────────────
+// ─── Pipeline Stages ──────────────────────────────────────────────────────────
 
 model PipelineStage {
   id            String        @id @default(cuid())
+  agencyId      String?
+  agency        Agency?       @relation(fields: [agencyId], references: [id])
   name          String
   order         Int
   color         String        @default("#E8610A")
@@ -101,6 +150,8 @@ model PipelineStage {
 
 model Contact {
   id           String   @id @default(cuid())
+  agencyId     String?
+  agency       Agency?  @relation(fields: [agencyId], references: [id])
   name         String
   phone        String?
   email        String?
@@ -134,7 +185,7 @@ model Interaction {
   channel    Channel
   content    String
   sentBy     String?
-  isInternal Boolean  @default(false)   // true = nota interna (no llega al cliente)
+  isInternal Boolean  @default(false)
   agentId    String?
   agent      User?    @relation(fields: [agentId], references: [id])
   createdAt  DateTime @default(now())
@@ -143,27 +194,28 @@ model Interaction {
 // ─── Opportunities / Pipeline ─────────────────────────────────────────────────
 
 model Opportunity {
-  id             String        @id @default(cuid())
-  contactId      String
-  contact        Contact       @relation(fields: [contactId], references: [id])
-  stageId        String
-  stage          PipelineStage @relation(fields: [stageId], references: [id])
-  agentId        String?
-  agent          User?         @relation(fields: [agentId], references: [id])
-  destination    String?
-  mayorista      String?
-  travelStart    DateTime?
-  travelEnd      DateTime?
-  checkIn        DateTime?
-  checkOut       DateTime?
-  estimatedValue Float?
-  currency       Currency      @default(DOP)
-  isInternational Boolean     @default(false)
-  // International checklist (stored as JSON string of checked items)
-  intlChecklist  String        @default("{}")
-  notes          String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  agencyId        String?
+  agency          Agency?       @relation(fields: [agencyId], references: [id])
+  contactId       String
+  contact         Contact       @relation(fields: [contactId], references: [id])
+  stageId         String
+  stage           PipelineStage @relation(fields: [stageId], references: [id])
+  agentId         String?
+  agent           User?         @relation(fields: [agentId], references: [id])
+  destination     String?
+  mayorista       String?
+  travelStart     DateTime?
+  travelEnd       DateTime?
+  checkIn         DateTime?
+  checkOut        DateTime?
+  estimatedValue  Float?
+  currency        Currency      @default(DOP)
+  isInternational Boolean       @default(false)
+  intlChecklist   String        @default("{}")
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   quotes   Quote[]
   invoices Invoice[]
@@ -196,8 +248,8 @@ model Quote {
   nights        Int?
   adults        Int          @default(1)
   children      Int          @default(0)
-  costPrice     Float        // precio de costo al mayorista
-  salePrice     Float        // precio de venta al cliente
+  costPrice     Float
+  salePrice     Float
   currency      Currency     @default(USD)
   exchangeRate  Float        @default(62)
   isSelected    Boolean      @default(false)
@@ -210,6 +262,8 @@ model Quote {
 
 model Invoice {
   id            String        @id @default(cuid())
+  agencyId      String?
+  agency        Agency?       @relation(fields: [agencyId], references: [id])
   number        String        @unique
   type          InvoiceType   @default(PROFORMA)
   ncfNumber     String?
@@ -265,6 +319,8 @@ model InvoiceItem {
 
 model SupplierOrder {
   id          String        @id @default(cuid())
+  agencyId    String?
+  agency      Agency?       @relation(fields: [agencyId], references: [id])
   invoiceId   String?
   invoice     Invoice?      @relation(fields: [invoiceId], references: [id])
   mayorista   String
@@ -282,6 +338,8 @@ model SupplierOrder {
 
 model GroupBlock {
   id              String     @id @default(cuid())
+  agencyId        String?
+  agency          Agency?    @relation(fields: [agencyId], references: [id])
   name            String
   hotel           String
   mayorista       String
@@ -318,24 +376,26 @@ model GroupPassenger {
 
 model AppConfig {
   id        String   @id @default(cuid())
-  key       String   @unique
+  agencyId  String?
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+  key       String
   value     String
   updatedAt DateTime @updatedAt
-}
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MARKETING & GROWTH HUB
-// ══════════════════════════════════════════════════════════════════════════════
+  @@unique([agencyId, key])
+}
 
 // ─── Social Accounts ─────────────────────────────────────────────────────────
 
 model SocialAccount {
   id           String   @id @default(cuid())
-  platform     String   // INSTAGRAM | FACEBOOK | TIKTOK | WHATSAPP | YOUTUBE | LINKEDIN
+  agencyId     String?
+  agency       Agency?  @relation(fields: [agencyId], references: [id])
+  platform     String
   accountName  String
   accountId    String?
   accessToken  String?
-  status       String   @default("PENDING") // CONNECTED | PENDING | DISCONNECTED | ERROR
+  status       String   @default("PENDING")
   avatarUrl    String?
   followers    Int      @default(0)
   createdAt    DateTime @default(now())
@@ -349,14 +409,16 @@ model SocialAccount {
 
 model MediaAsset {
   id          String   @id @default(cuid())
+  agencyId    String?
+  agency      Agency?  @relation(fields: [agencyId], references: [id])
   name        String
-  type        String   // IMAGE | VIDEO | TEMPLATE | LOGO | GRAPHIC
+  type        String
   url         String
   size        Int?
   width       Int?
   height      Int?
-  duration    Int?     // seconds, for video
-  tags        String   @default("[]") // JSON array of strings
+  duration    Int?
+  tags        String   @default("[]")
   notes       String?
   uploadedBy  String?
   createdAt   DateTime @default(now())
@@ -368,18 +430,17 @@ model PostDraft {
   id              String         @id @default(cuid())
   socialAccountId String?
   socialAccount   SocialAccount? @relation(fields: [socialAccountId], references: [id])
-  platform        String         // INSTAGRAM | FACEBOOK | TIKTOK
-  postType        String         // POST | REEL | STORY | CAROUSEL | VIDEO
+  platform        String
+  postType        String
   caption         String?
-  mediaUrls       String         @default("[]") // JSON array
+  mediaUrls       String         @default("[]")
   hashtags        String?
-  status          String         @default("DRAFT") // DRAFT | SCHEDULED | PUBLISHED | FAILED
+  status          String         @default("DRAFT")
   scheduledAt     DateTime?
   publishedAt     DateTime?
-  collaborators   String         @default("[]") // JSON array of @handles
+  collaborators   String         @default("[]")
   campaignId      String?
   campaign        Campaign?      @relation(fields: [campaignId], references: [id])
-  // Metrics after publishing
   reach           Int?
   impressions     Int?
   engagement      Int?
@@ -396,12 +457,14 @@ model PostDraft {
 
 model AutomationRule {
   id          String   @id @default(cuid())
+  agencyId    String?
+  agency      Agency?  @relation(fields: [agencyId], references: [id])
   name        String
   active      Boolean  @default(true)
-  platform    String   // INSTAGRAM | FACEBOOK | TIKTOK | WHATSAPP | ALL
-  trigger     String   // COMMENT | DM | KEYWORD | NEW_FOLLOWER | FORM_SUBMIT
-  conditions  String   // JSON: { keywords: [], matchType: "ANY"|"ALL", contentType: "COMMENT"|"DM" }
-  actions     String   // JSON array: [{ type: "REPLY_COMMENT"|"SEND_DM"|"CREATE_LEAD"|"TAG_LEAD"|"ASSIGN_AGENT"|"CREATE_TASK", payload: {} }]
+  platform    String
+  trigger     String
+  conditions  String
+  actions     String
   executions  Int      @default(0)
   lastRun     DateTime?
   createdAt   DateTime @default(now())
@@ -414,9 +477,9 @@ model AutomationLog {
   id           String         @id @default(cuid())
   ruleId       String
   rule         AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
-  triggeredBy  String?        // comment text / dm excerpt
+  triggeredBy  String?
   platform     String
-  actionsRun   String         // JSON array of executed actions
+  actionsRun   String
   leadCreated  Boolean        @default(false)
   createdAt    DateTime       @default(now())
 }
@@ -425,16 +488,17 @@ model AutomationLog {
 
 model Campaign {
   id             String   @id @default(cuid())
+  agencyId       String?
+  agency         Agency?  @relation(fields: [agencyId], references: [id])
   name           String
-  platform       String   // META | TIKTOK | GOOGLE | MANUAL
-  externalId     String?  // platform campaign ID
-  status         String   @default("ACTIVE") // ACTIVE | PAUSED | ENDED | DRAFT
-  objective      String?  // LEADS | REACH | TRAFFIC | CONVERSIONS
+  platform       String
+  externalId     String?
+  status         String   @default("ACTIVE")
+  objective      String?
   startDate      DateTime?
   endDate        DateTime?
   budget         Float    @default(0)
   currency       String   @default("USD")
-  // Metrics (updated via API or manual)
   spent          Float    @default(0)
   reach          Int      @default(0)
   impressions    Int      @default(0)
@@ -454,12 +518,12 @@ model CampaignLead {
   campaignId  String
   campaign    Campaign @relation(fields: [campaignId], references: [id])
   contactId   String?
-  source      String   // COMMENT | DM | FORM | META_LEAD_FORM | WHATSAPP
+  source      String
   platform    String
   createdAt   DateTime @default(now())
 }
 
-// ─── Social Metrics (daily snapshots) ────────────────────────────────────────
+// ─── Social Metrics ───────────────────────────────────────────────────────────
 
 model SocialMetric {
   id              String         @id @default(cuid())
@@ -480,44 +544,50 @@ model SocialMetric {
 
 model SalesGoal {
   id        String   @id @default(cuid())
-  month     String   // "2026-06"
-  userId    String?  // null = team goal
+  agencyId  String?
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+  month     String
+  userId    String?
   target    Float
   currency  String   @default("USD")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([month, userId])
+  @@unique([agencyId, month, userId])
 }
 
 // ─── Business Expenses ────────────────────────────────────────────────────────
 
 model Expense {
-  id          String   @id @default(cuid())
-  date        DateTime @default(now())
-  category    String   // NOMINA | OFICINA | MARKETING | SOFTWARE | VIAJES | PROVEEDOR | IMPUESTO | OTRO
-  description String
-  amount      Float
-  currency    Currency @default(DOP)
-  paymentMethod String @default("EFECTIVO") // EFECTIVO | TRANSFERENCIA | TARJETA | CHEQUE
-  receiptUrl  String?
-  notes       String?
-  userId      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  agencyId      String?
+  agency        Agency?  @relation(fields: [agencyId], references: [id])
+  date          DateTime @default(now())
+  category      String
+  description   String
+  amount        Float
+  currency      Currency @default(DOP)
+  paymentMethod String   @default("EFECTIVO")
+  receiptUrl    String?
+  notes         String?
+  userId        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
-// ─── Credits (client pays supplier directly → supplier owes agency commission) ─
+// ─── Credits ──────────────────────────────────────────────────────────────────
 
 model Credit {
   id          String   @id @default(cuid())
-  invoiceId   String?                          // client invoice this credit relates to
+  agencyId    String?
+  agency      Agency?  @relation(fields: [agencyId], references: [id])
+  invoiceId   String?
   invoice     Invoice? @relation(fields: [invoiceId], references: [id])
-  mayorista   String                           // supplier who owes the credit
+  mayorista   String
   description String
-  amount      Float                            // credit amount (agency commission)
+  amount      Float
   currency    Currency @default(USD)
-  status      String   @default("PENDIENTE")  // PENDIENTE | COBRADO | CANCELADO
+  status      String   @default("PENDIENTE")
   dueDate     DateTime?
   paidAt      DateTime?
   notes       String?
@@ -529,6 +599,8 @@ model Credit {
 
 model Task {
   id            String       @id @default(cuid())
+  agencyId      String?
+  agency        Agency?      @relation(fields: [agencyId], references: [id])
   title         String
   description   String?
   contactId     String?
@@ -541,8 +613,8 @@ model Task {
   creator       User?        @relation("TaskCreator", fields: [createdBy], references: [id])
   dueDate       DateTime?
   reminderAt    DateTime?
-  priority      String       @default("NORMAL")  // LOW | NORMAL | HIGH | URGENT
-  status        String       @default("PENDIENTE") // PENDIENTE | EN_PROGRESO | COMPLETADA | CANCELADA
+  priority      String       @default("NORMAL")
+  status        String       @default("PENDIENTE")
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -551,9 +623,11 @@ model Task {
 
 model PaymentLog {
   id          String   @id @default(cuid())
-  entityType  String   // INVOICE | SUPPLIER_ORDER | CREDIT | EXPENSE
+  agencyId    String?
+  agency      Agency?  @relation(fields: [agencyId], references: [id])
+  entityType  String
   entityId    String
-  action      String   // STATUS_CHANGED | CREATED | UPDATED | DELETED
+  action      String
   fromValue   String?
   toValue     String?
   notes       String?
@@ -566,8 +640,10 @@ model PaymentLog {
 
 model PaymentMethodConfig {
   id          String   @id @default(cuid())
+  agencyId    String?
+  agency      Agency?  @relation(fields: [agencyId], references: [id])
   name        String
-  type        String   @default("TRANSFERENCIA") // EFECTIVO | TRANSFERENCIA | TARJETA | CHEQUE | OTRO
+  type        String   @default("TRANSFERENCIA")
   bankName    String?
   accountNum  String?
   description String?
@@ -582,9 +658,11 @@ model PaymentMethodConfig {
 
 model AiConversation {
   id        String    @id @default(cuid())
+  agencyId  String?
+  agency    Agency?   @relation(fields: [agencyId], references: [id])
   userId    String
   title     String?
-  messages  String    // JSON array of {role, content}
+  messages  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

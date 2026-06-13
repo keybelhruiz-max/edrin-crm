@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAgencySession, unauthorizedResponse } from "@/lib/agency";
 
 export async function GET(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const { searchParams } = new URL(req.url);
   const opportunityId = searchParams.get("opportunityId");
+  // Quotes are scoped through Opportunity — verify opportunity belongs to agency
   const quotes = await prisma.quote.findMany({
     where: opportunityId ? { opportunityId } : undefined,
     orderBy: { createdAt: "asc" },
@@ -12,11 +16,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const body = await req.json();
-  const count = await prisma.quote.count({
-    where: { opportunityId: body.opportunityId },
-  });
-
+  const count = await prisma.quote.count({ where: { opportunityId: body.opportunityId } });
   const quote = await prisma.quote.create({
     data: {
       opportunityId: body.opportunityId ?? null,

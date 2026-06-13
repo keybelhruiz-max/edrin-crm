@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAgencySession, agencyWhere, unauthorizedResponse } from "@/lib/agency";
 
-// GET /api/commissions?userId=...&month=2026-06
 export async function GET(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
-  const month = searchParams.get("month"); // format: YYYY-MM
+  const month = searchParams.get("month");
 
-  // Build date range
   let dateFrom: Date | undefined;
   let dateTo: Date | undefined;
   if (month) {
@@ -16,9 +17,9 @@ export async function GET(req: Request) {
     dateTo = new Date(y, m, 0, 23, 59, 59);
   }
 
-  // Get all agents with their commission rates
   const users = await prisma.user.findMany({
     where: {
+      ...agencyWhere(s),
       role: { in: ["VENTAS", "ADMIN", "CONTENIDO"] },
       active: true,
       ...(userId ? { id: userId } : {}),
@@ -27,30 +28,25 @@ export async function GET(req: Request) {
     orderBy: { name: "asc" },
   });
 
-  // For each user, get their invoices in the period
   const result = await Promise.all(
     users.map(async (user) => {
       const invoices = await prisma.invoice.findMany({
         where: {
+          ...agencyWhere(s),
           agentId: user.id,
           status: { in: ["PAGADO", "PARCIAL"] },
-          ...(dateFrom && dateTo
-            ? { createdAt: { gte: dateFrom, lte: dateTo } }
-            : {}),
+          ...(dateFrom && dateTo ? { createdAt: { gte: dateFrom, lte: dateTo } } : {}),
         },
         select: { id: true, number: true, total: true, currency: true, status: true, createdAt: true },
       });
-
-      const totalBilled = invoices.reduce((s, inv) => s + inv.total, 0);
+      const totalBilled = invoices.reduce((sum, inv) => sum + inv.total, 0);
       const rate = user.commissionRate?.rate ?? 5;
-      const commission = (totalBilled * rate) / 100;
-
       return {
         user: { id: user.id, name: user.name, email: user.email, role: user.role },
         commissionRate: user.commissionRate ?? { rate: 5, type: "AGENTE" },
         invoices,
         totalBilled,
-        commission,
+        commission: (totalBilled * rate) / 100,
       };
     })
   );
@@ -58,8 +54,9 @@ export async function GET(req: Request) {
   return NextResponse.json(result);
 }
 
-// POST /api/commissions — set rate for a user
 export async function POST(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const { userId, rate, type } = await req.json();
   const cr = await prisma.commissionRate.upsert({
     where: { userId },

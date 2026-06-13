@@ -13,31 +13,21 @@ const nav = [
   { href: "/comisiones", label: "Comisiones", icon: "◈" },
 ];
 
-const marketingNav = [
-  { href: "/marketing", label: "Hub Marketing", icon: "✦" },
-  { href: "/marketing/calendario", label: "Calendario", icon: "▦" },
-  { href: "/marketing/biblioteca", label: "Biblioteca", icon: "▣" },
-  { href: "/marketing/automatizaciones", label: "Automatizaciones", icon: "⟳" },
-  { href: "/marketing/campanas", label: "Campañas", icon: "◉" },
-  { href: "/marketing/reportes", label: "Reportes", icon: "◳" },
-  { href: "/ai", label: "Edrin AI", icon: "✧" },
-];
-
-const adminNav = [
-  { href: "/ajustes/pipeline", label: "Etapas pipeline", icon: "◧" },
-  { href: "/ajustes/metodos-pago", label: "Métodos de pago", icon: "💳" },
-  { href: "/ajustes/comisiones", label: "Comisiones", icon: "◩" },
-  { href: "/ajustes/terminos", label: "Términos", icon: "◪" },
-  { href: "/ajustes/integraciones", label: "Integraciones", icon: "⟴" },
-];
-
-/* Mobile bottom nav — only 5 most used items */
 const mobileNav = [
   { href: "/pipeline", label: "Pipeline", icon: "⬡" },
   { href: "/leads", label: "Leads", icon: "◎" },
   { href: "/facturas", label: "Facturas", icon: "≡" },
   { href: "/tareas", label: "Tareas", icon: "☑" },
   { href: "/ai", label: "AI", icon: "✧" },
+];
+
+const adminNav = [
+  { href: "/ajustes/agencia", label: "Mi Agencia", icon: "🏢" },
+  { href: "/ajustes/pipeline", label: "Etapas pipeline", icon: "◧" },
+  { href: "/ajustes/metodos-pago", label: "Métodos de pago", icon: "💳" },
+  { href: "/ajustes/comisiones", label: "Comisiones", icon: "◩" },
+  { href: "/ajustes/terminos", label: "Términos", icon: "◪" },
+  { href: "/ajustes/integraciones", label: "Integraciones", icon: "⟴" },
 ];
 
 function NavItem({ href, label, icon, exact = false }: { href: string; label: string; icon: string; exact?: boolean }) {
@@ -48,8 +38,8 @@ function NavItem({ href, label, icon, exact = false }: { href: string; label: st
       href={href}
       className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
       style={{
-        color: active ? "#E8610A" : "var(--sidebar-text)",
-        background: active ? "#FFF4EE" : "transparent",
+        color: active ? "var(--brand)" : "var(--sidebar-text)",
+        background: active ? "var(--brand-light)" : "transparent",
         fontWeight: active ? 600 : 400,
       }}
     >
@@ -59,12 +49,18 @@ function NavItem({ href, label, icon, exact = false }: { href: string; label: st
   );
 }
 
-export default function Sidebar() {
+type Agency = { name: string; logoUrl?: string | null; primaryColor: string } | null;
+
+export default function Sidebar({ agency }: { agency?: Agency }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { theme, toggle } = useTheme();
-  const isAdmin = (session?.user as { role?: string })?.role === "ADMIN";
+  const userRole = (session?.user as { role?: string })?.role;
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN";
+  const isSuperAdmin = userRole === "SUPERADMIN";
   const userName = session?.user?.name ?? "Usuario";
+  const agencyName = agency?.name ?? "CRM";
+  const agencyInitial = agencyName[0]?.toUpperCase() ?? "A";
 
   return (
     <>
@@ -76,17 +72,22 @@ export default function Sidebar() {
           borderColor: "var(--sidebar-border)",
         }}
       >
-        {/* Logo */}
+        {/* Agency logo/name */}
         <div className="px-4 pt-5 pb-4 border-b" style={{ borderColor: "var(--sidebar-border)" }}>
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shrink-0"
-              style={{ background: "#E8610A" }}
-            >
-              E
-            </div>
+            {agency?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={agency.logoUrl} alt={agencyName} className="w-8 h-8 rounded-lg object-contain" />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shrink-0"
+                style={{ background: "var(--brand)" }}
+              >
+                {agencyInitial}
+              </div>
+            )}
             <div>
-              <div className="font-bold text-sm leading-tight" style={{ color: "var(--text)" }}>Edrin Travel</div>
+              <div className="font-bold text-sm leading-tight" style={{ color: "var(--text)" }}>{agencyName}</div>
               <div className="text-xs" style={{ color: "var(--sidebar-text)" }}>CRM</div>
             </div>
           </div>
@@ -118,6 +119,15 @@ export default function Sidebar() {
               {adminNav.map((item) => <NavItem key={item.href} {...item} />)}
             </>
           )}
+
+          {isSuperAdmin && (
+            <>
+              <div className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1.5" style={{ color: "#C4C4C4" }}>
+                Plataforma
+              </div>
+              <NavItem href="/superadmin" label="Gestión agencias" icon="🌐" />
+            </>
+          )}
         </nav>
 
         {/* Footer */}
@@ -134,14 +144,14 @@ export default function Sidebar() {
           <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg" style={{ background: "var(--bg)" }}>
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-              style={{ background: "#E8610A" }}
+              style={{ background: "var(--brand)" }}
             >
               {userName[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{userName}</div>
               <div className="text-xs truncate" style={{ color: "var(--sidebar-text)" }}>
-                {(session?.user as { role?: string })?.role ?? ""}
+                {userRole ?? ""}
               </div>
             </div>
             <button
@@ -174,7 +184,7 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-medium transition-all"
-              style={{ color: active ? "#E8610A" : "var(--sidebar-text)" }}
+              style={{ color: active ? "var(--brand)" : "var(--sidebar-text)" }}
             >
               <span className="text-lg leading-none">{item.icon}</span>
               <span className="text-[10px]">{item.label}</span>

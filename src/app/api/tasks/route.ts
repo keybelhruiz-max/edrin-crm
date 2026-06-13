@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAgencySession, agencyWhere, unauthorizedResponse } from "@/lib/agency";
 
 export async function GET(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const assignedTo = searchParams.get("assignedTo");
   const contactId = searchParams.get("contactId");
   const opportunityId = searchParams.get("opportunityId");
-
   const tasks = await prisma.task.findMany({
     where: {
+      ...agencyWhere(s),
       ...(status ? { status } : {}),
       ...(assignedTo ? { assignedTo } : {}),
       ...(contactId ? { contactId } : {}),
@@ -27,10 +30,13 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const session = await auth();
   const body = await req.json();
   const task = await prisma.task.create({
     data: {
+      agencyId: s.agencyId || null,
       title: body.title,
       description: body.description ?? null,
       contactId: body.contactId ?? null,

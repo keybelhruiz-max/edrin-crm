@@ -1,25 +1,34 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAgencySession, agencyWhere, unauthorizedResponse } from "@/lib/agency";
 
 export async function GET(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const { searchParams } = new URL(req.url);
-  const month = searchParams.get("month"); // "2026-06"
-  const where = month
+  const month = searchParams.get("month");
+  const dateFilter = month
     ? {
         date: {
           gte: new Date(`${month}-01`),
           lt: new Date(new Date(`${month}-01`).setMonth(new Date(`${month}-01`).getMonth() + 1)),
         },
       }
-    : undefined;
-  const expenses = await prisma.expense.findMany({ where, orderBy: { date: "desc" } });
+    : {};
+  const expenses = await prisma.expense.findMany({
+    where: { ...agencyWhere(s), ...dateFilter },
+    orderBy: { date: "desc" },
+  });
   return NextResponse.json(expenses);
 }
 
 export async function POST(req: Request) {
+  const s = await getAgencySession();
+  if (!s) return unauthorizedResponse();
   const body = await req.json();
   const expense = await prisma.expense.create({
     data: {
+      agencyId: s.agencyId || null,
       date: body.date ? new Date(body.date) : new Date(),
       category: body.category,
       description: body.description,

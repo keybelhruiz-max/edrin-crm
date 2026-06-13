@@ -1,19 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
-import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const dbPath = path.join(__dirname, "..", "dev.db");
-const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Conectando a:", dbPath);
-
   const stages = [
     { id: "stage-1", name: "Nuevo contacto", order: 1, color: "#6B7280", isDefault: true },
     { id: "stage-2", name: "Cotización enviada", order: 2, color: "#3B82F6", isDefault: false },

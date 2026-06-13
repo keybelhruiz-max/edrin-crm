@@ -11,9 +11,13 @@ async function nextInvoiceNumber() {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const opportunityId = searchParams.get("opportunityId");
+  const includeOrders = searchParams.has("include") && searchParams.get("include")?.includes("supplierOrders");
   const invoices = await prisma.invoice.findMany({
     where: opportunityId ? { opportunityId } : undefined,
-    include: { items: true },
+    include: {
+      items: true,
+      ...(includeOrders ? { supplierOrders: true } : {}),
+    },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(invoices);

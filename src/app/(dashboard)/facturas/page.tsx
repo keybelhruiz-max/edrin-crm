@@ -139,7 +139,7 @@ function ClienteTab() {
   return (
     <>
       {/* Stats */}
-      <div className="px-6 pt-4 pb-3 grid grid-cols-3 gap-3">
+      <div className="px-6 pt-4 pb-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: "Total facturado", value: fmt(totalBilled, "DOP"), color: "#6366F1" },
           { label: "Cobrado",         value: fmt(totalPaid,   "DOP"), color: "#10B981" },
@@ -416,7 +416,7 @@ function ClienteTab() {
                   ))}
                 </div>
               )}
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {(["PENDIENTE", "PAGADO", "PARCIAL", "CANCELADO"] as PaymentStatus[]).map(st => (
                   <button key={st} onClick={() => { updateStatus(selected.id, st); setSelected(null); }}
                     className="py-2 rounded-xl text-xs font-medium border transition"
@@ -779,7 +779,7 @@ function ProveedorTab() {
                   {selected.currency}
                 </span>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {(["PENDIENTE", "PAGADO", "PARCIAL", "CANCELADO"] as PaymentStatus[]).map(st => (
                   <button key={st} onClick={() => { updateStatus(selected.id, st); setSelected(null); }}
                     className="py-2 rounded-xl text-xs font-medium border transition"
@@ -996,7 +996,7 @@ function GastosTab() {
                   className="w-full border px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)", borderRadius: "10px" }}
                   placeholder="Ej: Renta de oficina junio..." />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Moneda</label>
                   <select value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value as Currency }))}
@@ -1088,7 +1088,7 @@ function CreditosTab() {
 
   return (
     <>
-      <div className="px-6 pt-4 pb-3 grid grid-cols-3 gap-3">
+      <div className="px-6 pt-4 pb-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl p-4 border stat-card" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
           <div className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Por cobrar (USD)</div>
           <div className="text-xl font-bold" style={{ color: "#059669" }}>{fmt(pendUSD, "USD")}</div>

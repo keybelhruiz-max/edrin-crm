@@ -96,7 +96,7 @@ export default function CampanasPage() {
         />
 
         {/* Global KPIs */}
-        <div className="grid grid-cols-6 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
           {[
             { label: "Presupuesto", value: `$${totals.budget.toFixed(0)}`, color: "var(--text)" },
             { label: "Gastado", value: `$${totals.spent.toFixed(0)}`, color: "#f59e0b" },
@@ -191,7 +191,7 @@ export default function CampanasPage() {
 
         {/* Summary cards */}
         {filtered.length > 0 && (
-          <div className="grid grid-cols-2 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
             <Card>
               <h4 className="font-semibold mb-3" style={{ color: "var(--text)" }}>Por plataforma</h4>
               {Object.entries(
@@ -248,7 +248,7 @@ export default function CampanasPage() {
               <h3 className="font-bold" style={{ color: "var(--text)" }}>{selected.name}</h3>
               <button onClick={() => setSelected(null)} style={{ color: "var(--text-muted)" }}>✕</button>
             </div>
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {[
                 { label: "Presupuesto", value: `$${selected.budget.toLocaleString()}` },
                 { label: "Gastado", value: `$${selected.spent.toLocaleString()}` },
@@ -283,7 +283,7 @@ export default function CampanasPage() {
             </div>
             <div className="space-y-3">
               <Input label="Nombre" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Ej: Semana Santa 2026" />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Plataforma</label>
                   <select value={form.platform} onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
@@ -305,7 +305,7 @@ export default function CampanasPage() {
                 </div>
               </div>
               <Input label="Presupuesto (USD)" type="number" value={form.budget} onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} placeholder="500" />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="Fecha inicio" type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} />
                 <Input label="Fecha fin" type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} />
               </div>

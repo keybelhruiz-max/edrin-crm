@@ -99,7 +99,7 @@ export default function AgenciaPage() {
       {/* Identidad de marca */}
       <section className="card space-y-5">
         <h2 className="font-semibold text-base" style={{ color: "var(--text)" }}>Identidad de marca</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-subtle)" }}>
               Nombre comercial
@@ -198,7 +198,7 @@ export default function AgenciaPage() {
       {/* Tasas de cambio */}
       <section className="card space-y-4">
         <h2 className="font-semibold text-base" style={{ color: "var(--text)" }}>Tasas de cambio</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-subtle)" }}>
               Tasa DOP/USD (RD$ por 1 USD)
@@ -250,7 +250,7 @@ export default function AgenciaPage() {
       {/* Facturación */}
       <section className="card space-y-4">
         <h2 className="font-semibold text-base" style={{ color: "var(--text)" }}>Datos de facturación</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { field: "billingName" as const, label: "Razón social" },
             { field: "billingRnc" as const, label: "RNC / Cédula" },

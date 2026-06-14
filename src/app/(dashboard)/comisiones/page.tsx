@@ -65,7 +65,7 @@ export default function ComisionesPage() {
       <div className="p-6 space-y-6">
         {/* Summary cards — admin only */}
         {role === "ADMIN" && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <div className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Total facturado</div>
               <div className="text-2xl font-bold" style={{ color: "var(--text)" }}>

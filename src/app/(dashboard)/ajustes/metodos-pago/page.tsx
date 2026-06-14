@@ -156,7 +156,7 @@ export default function MetodosPagoPage() {
                   className="w-full border px-3 py-2 text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)", borderRadius: "10px" }}
                   placeholder="Ej: Cuenta BHD Pesos, Efectivo caja, Zelle..." />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Tipo</label>
                   <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}

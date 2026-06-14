@@ -106,7 +106,7 @@ export default function ReportesPage() {
             {/* COMMERCIAL REPORT */}
             {type === "commercial" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
                     { label: "Facturado este mes", value: `$${(data.totalThisMonth ?? 0).toLocaleString("es-DO", { minimumFractionDigits: 2 })}`, sub: data.growth !== undefined ? `${data.growth >= 0 ? "+" : ""}${data.growth.toFixed(1)}% vs mes anterior` : "", color: "var(--brand)" },
                     { label: "Mes anterior", value: `$${(data.totalPrevMonth ?? 0).toLocaleString("es-DO", { minimumFractionDigits: 2 })}`, sub: "Comparativo", color: "var(--text-muted)" },
@@ -152,7 +152,7 @@ export default function ReportesPage() {
             {/* FINANCIAL REPORT */}
             {type === "financial" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
                     { label: "Total facturado", value: `$${(data.totalBilled ?? 0).toLocaleString()}`, color: "var(--brand)" },
                     { label: "Total cobrado", value: `$${(data.totalPaid ?? 0).toLocaleString()}`, color: "#10b981" },
@@ -215,7 +215,7 @@ export default function ReportesPage() {
             {/* LEADS REPORT */}
             {type === "leads" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
                     { label: "Leads este mes", value: data.leadsThisMonth ?? 0, color: "var(--brand)" },
                     { label: "Negocios cerrados", value: data.oppsWon ?? 0, color: "#10b981" },
@@ -255,7 +255,7 @@ export default function ReportesPage() {
             {/* CAMPAIGNS REPORT */}
             {type === "campaigns" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
                     { label: "Total invertido", value: `$${(data.totalSpent ?? 0).toFixed(0)}`, color: "#f59e0b" },
                     { label: "Leads generados", value: data.totalLeads ?? 0, color: "#10b981" },

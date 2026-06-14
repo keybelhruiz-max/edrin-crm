@@ -143,7 +143,7 @@ export default function AutomatizacionesPage() {
         />
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Card className="text-center">
             <div className="text-3xl font-black mb-1" style={{ color: "var(--brand)" }}>{rules.length}</div>
             <div className="text-sm" style={{ color: "var(--text)" }}>Reglas totales</div>
@@ -164,7 +164,7 @@ export default function AutomatizacionesPage() {
         {rules.length === 0 && (
           <div className="mb-8">
             <h3 className="font-bold mb-4" style={{ color: "var(--text)" }}>Plantillas recomendadas</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {TEMPLATE_RULES.map(t => (
                 <div key={t.name} className="p-4 rounded-xl"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>

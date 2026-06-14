@@ -96,7 +96,7 @@ export default function BibliotecaPage() {
         />
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
             { label: "Total archivos", value: assets.length, icon: "📁" },
             { label: "Imágenes", value: assets.filter(a => a.type === "IMAGE").length, icon: "🖼️" },
@@ -156,7 +156,7 @@ export default function BibliotecaPage() {
             )}
 
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {filtered.map(a => (
                   <div key={a.id} onClick={() => setSelected(a)}
                     className="rounded-xl overflow-hidden cursor-pointer transition hover:shadow-lg"

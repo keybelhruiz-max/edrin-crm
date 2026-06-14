@@ -112,7 +112,7 @@ export default function ComisionesConfigPage() {
         {/* Add new user */}
         <Card className="border-dashed">
           <div className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Agregar nuevo usuario</div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Nombre"
               value={newUser.name}

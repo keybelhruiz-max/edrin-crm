@@ -222,7 +222,7 @@ function QuoteCard({
           </div>
 
           {/* Prices */}
-          <div className="grid grid-cols-3 gap-3 bg-gray-50 rounded-lg p-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 rounded-lg p-3">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Moneda</label>
               <select
@@ -467,7 +467,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="flex flex-col h-screen overflow-auto">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white sticky top-0 z-10">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b bg-white sticky top-0 z-10 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-700 text-lg">←</button>
           <div>
@@ -495,9 +495,9 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
         </select>
       </div>
 
-      <div className="grid grid-cols-3 gap-0 flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 flex-1">
         {/* LEFT — Lead info */}
-        <div className="col-span-2 p-6 space-y-6 border-r overflow-auto">
+        <div className="md:col-span-2 p-4 md:p-6 space-y-6 md:border-r overflow-auto">
 
           {/* Basic info */}
           <section>

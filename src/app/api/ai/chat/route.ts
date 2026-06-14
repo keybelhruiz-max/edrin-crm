@@ -118,6 +118,15 @@ ${context}`,
 export async function GET(req: Request) {
   const session = await auth();
   const userId = (session?.user as { id?: string })?.id;
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
+  if (id) {
+    const conv = await prisma.aiConversation.findUnique({ where: { id } });
+    if (!conv) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ id: conv.id, title: conv.title, messages: JSON.parse(conv.messages as string) });
+  }
+
   const convs = await prisma.aiConversation.findMany({
     where: userId ? { userId } : undefined,
     orderBy: { updatedAt: "desc" },

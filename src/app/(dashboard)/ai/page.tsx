@@ -54,6 +54,16 @@ export default function AIPage() {
     }
   }
 
+  async function loadConversation(id: string) {
+    try {
+      const res = await fetch(`/api/ai/chat?id=${id}`);
+      const data = await res.json();
+      setMessages(data.messages ?? []);
+      setConvId(id);
+      setHistoryOpen(false);
+    } catch { /* ignore */ }
+  }
+
   function newChat() {
     setMessages([]);
     setConvId(null);
@@ -96,7 +106,7 @@ export default function AIPage() {
             {history.map(c => (
               <button
                 key={c.id}
-                onClick={() => { setHistoryOpen(false); /* could load conv */ }}
+                onClick={() => loadConversation(c.id)}
                 className="w-full text-left px-3 py-2 rounded-lg text-sm transition hover:opacity-80"
                 style={{ background: c.id === convId ? "var(--brand)" : "transparent", color: c.id === convId ? "#fff" : "var(--text)" }}
               >

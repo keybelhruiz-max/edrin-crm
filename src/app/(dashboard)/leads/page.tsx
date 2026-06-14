@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { PageHeader, Card, Input, Select, Btn, Badge } from "@/components/ui";
 
 type Contact = {
@@ -235,18 +236,18 @@ export default function LeadsPage() {
             {filtered.map((c) => (
               <Card key={c.id} className="hover:border-[#E8610A]/40 transition group">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-3">
+                  <Link href={`/leads/${c.id}`} className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                       style={{ background: CHANNEL_COLORS[c.channel] ?? "#6B7280" }}>
                       {c.name[0]}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="font-semibold text-sm" style={{ color: "var(--text)" }}>{c.name}</div>
                       <div className="text-xs" style={{ color: "var(--text-muted)" }}>
                         {c.phone || c.email || c.agent?.name || "—"}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                   <Badge color={CHANNEL_COLORS[c.channel]}>{c.channel}</Badge>
                 </div>
                 {c.notes && (

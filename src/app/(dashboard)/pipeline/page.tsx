@@ -136,7 +136,7 @@ export default function PipelinePage() {
             ⚙️ Configurar etapas
           </Link>
           <Link
-            href="/leads/nuevo"
+            href="/leads"
             className="text-sm bg-[#E8610A] text-white rounded-lg px-4 py-1.5 hover:bg-[#c94f08] transition"
           >
             + Nuevo lead

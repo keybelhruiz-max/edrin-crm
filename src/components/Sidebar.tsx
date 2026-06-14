@@ -33,6 +33,7 @@ const mobileMore = [
 
 const adminNav = [
   { href: "/ajustes/agencia", label: "Mi Agencia", icon: "🏢" },
+  { href: "/ajustes/usuarios", label: "Usuarios", icon: "👥" },
   { href: "/ajustes/pipeline", label: "Etapas pipeline", icon: "◧" },
   { href: "/ajustes/metodos-pago", label: "Métodos de pago", icon: "💳" },
   { href: "/ajustes/comisiones", label: "Comisiones", icon: "◩" },

@@ -84,8 +84,8 @@ export default function PipelinePage() {
   );
 
   useEffect(() => {
-    fetch("/api/pipeline-stages").then((r) => r.json()).then(setStages);
-    fetch("/api/opportunities").then((r) => r.json()).then(setOpportunities);
+    fetch("/api/pipeline-stages").then((r) => r.json()).then((d) => setStages(Array.isArray(d) ? d : []));
+    fetch("/api/opportunities").then((r) => r.json()).then((d) => setOpportunities(Array.isArray(d) ? d : []));
   }, []);
 
   function handleDragOver(event: DragOverEvent) {

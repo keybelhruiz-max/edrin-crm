@@ -4,55 +4,70 @@ import { prisma } from "@/lib/prisma";
 import { getAgencySession, agencyWhere, unauthorizedResponse } from "@/lib/agency";
 
 export async function GET(req: Request) {
-  const s = await getAgencySession();
-  if (!s) return unauthorizedResponse();
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status");
-  const assignedTo = searchParams.get("assignedTo");
-  const contactId = searchParams.get("contactId");
-  const opportunityId = searchParams.get("opportunityId");
-  const tasks = await prisma.task.findMany({
-    where: {
-      ...agencyWhere(s),
-      ...(status ? { status } : {}),
-      ...(assignedTo ? { assignedTo } : {}),
-      ...(contactId ? { contactId } : {}),
-      ...(opportunityId ? { opportunityId } : {}),
-    },
-    include: {
-      assignee: { select: { id: true, name: true } },
-      creator: { select: { id: true, name: true } },
-      contact: { select: { id: true, name: true } },
-    },
-    orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
-  });
-  return NextResponse.json(tasks);
+  try {
+    const s = await getAgencySession();
+    if (!s) return unauthorizedResponse();
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status");
+    const assignedTo = searchParams.get("assignedTo");
+    const contactId = searchParams.get("contactId");
+    const opportunityId = searchParams.get("opportunityId");
+    const tasks = await prisma.task.findMany({
+      where: {
+        ...agencyWhere(s),
+        ...(status ? { status } : {}),
+        ...(assignedTo ? { assignedTo } : {}),
+        ...(contactId ? { contactId } : {}),
+        ...(opportunityId ? { opportunityId } : {}),
+      },
+      include: {
+        assignee: { select: { id: true, name: true } },
+        creator: { select: { id: true, name: true } },
+        contact: { select: { id: true, name: true } },
+      },
+      orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+    });
+    return NextResponse.json(tasks);
+  } catch (err: unknown) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const s = await getAgencySession();
-  if (!s) return unauthorizedResponse();
-  const session = await auth();
-  const body = await req.json();
-  const task = await prisma.task.create({
-    data: {
-      agencyId: s.agencyId || null,
-      title: body.title,
-      description: body.description ?? null,
-      contactId: body.contactId ?? null,
-      opportunityId: body.opportunityId ?? null,
-      assignedTo: body.assignedTo || null,
-      createdBy: (session?.user as { id?: string })?.id ?? null,
-      dueDate: body.dueDate ? new Date(body.dueDate) : null,
-      reminderAt: body.reminderAt ? new Date(body.reminderAt) : null,
-      priority: body.priority ?? "NORMAL",
-      status: "PENDIENTE",
-    },
-    include: {
-      assignee: { select: { id: true, name: true } },
-      creator: { select: { id: true, name: true } },
-      contact: { select: { id: true, name: true } },
-    },
-  });
-  return NextResponse.json(task, { status: 201 });
+  try {
+    const s = await getAgencySession();
+    if (!s) return unauthorizedResponse();
+    const session = await auth();
+    const body = await req.json();
+
+    if (!body.title?.trim()) {
+      return NextResponse.json({ error: "Título requerido" }, { status: 400 });
+    }
+
+    const task = await prisma.task.create({
+      data: {
+        agencyId: s.agencyId || null,
+        title: body.title.trim(),
+        description: body.description ?? null,
+        contactId: body.contactId ?? null,
+        opportunityId: body.opportunityId ?? null,
+        assignedTo: body.assignedTo || null,
+        createdBy: (session?.user as { id?: string })?.id ?? null,
+        dueDate: body.dueDate ? new Date(body.dueDate) : null,
+        reminderAt: body.reminderAt ? new Date(body.reminderAt) : null,
+        priority: body.priority ?? "NORMAL",
+        status: "PENDIENTE",
+      },
+      include: {
+        assignee: { select: { id: true, name: true } },
+        creator: { select: { id: true, name: true } },
+        contact: { select: { id: true, name: true } },
+      },
+    });
+    return NextResponse.json(task, { status: 201 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[POST /api/tasks]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

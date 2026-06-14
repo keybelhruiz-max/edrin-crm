@@ -517,7 +517,7 @@ export default function ImportarPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 divide-x" style={{ divideColor: "var(--border)" }}>
+              <div className="grid grid-cols-3 divide-x divide-[var(--border)]">
                 {[
                   { label: "Importados", value: result.imported, color: "#059669", bg: "#ECFDF5" },
                   { label: "Omitidos (duplicados)", value: result.skipped, color: "#D97706", bg: "#FFFBEB" },

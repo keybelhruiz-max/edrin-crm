@@ -175,7 +175,7 @@ export async function POST(req: Request) {
         let agentId: string | null = null;
         if (row.agentEmail) {
           const agent = agents.find(
-            (a) => a.email === row.agentEmail || a.name.toLowerCase() === row.agentEmail.toLowerCase()
+            (a) => a.email === row.agentEmail || (a.name?.toLowerCase() === row.agentEmail.toLowerCase())
           );
           agentId = agent?.id ?? null;
         }
@@ -187,7 +187,7 @@ export async function POST(req: Request) {
             phone: row.phone || null,
             email: row.email || null,
             socialHandle: row.socialHandle || null,
-            channel: row.channel ? parseChannel(row.channel) : options.defaultChannel || "OTRO",
+            channel: (row.channel ? parseChannel(row.channel) : options.defaultChannel || "OTRO") as import("@prisma/client").Channel,
             notes: row.notes || null,
             tags: "[]",
             agentId,

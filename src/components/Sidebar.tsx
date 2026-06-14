@@ -135,6 +135,7 @@ export default function Sidebar({ agency }: { agency?: Agency }) {
                 Admin
               </div>
               {adminNav.map((item) => <NavItem key={item.href} {...item} />)}
+              <NavItem href="/importar" label="Importar datos" icon="📥" />
             </>
           )}
 

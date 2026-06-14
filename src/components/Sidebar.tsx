@@ -2,61 +2,115 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "./ThemeProvider";
+import {
+  LayoutDashboard,
+  Kanban,
+  UserPlus,
+  ReceiptText,
+  ListChecks,
+  BadgePercent,
+  Megaphone,
+  CalendarDays,
+  Library,
+  Zap,
+  Send,
+  BarChart3,
+  Sparkles,
+  Wallet,
+  TrendingUp,
+  GitBranch,
+  Shield,
+  Building2,
+  UsersRound,
+  Layers,
+  CreditCard,
+  FileText,
+  Plug,
+  Upload,
+  Globe,
+  Wrench,
+  Sun,
+  Moon,
+  LogOut,
+} from "lucide-react";
 
-const nav = [
-  { href: "/pipeline", label: "Pipeline", icon: "⬡" },
-  { href: "/leads", label: "Leads", icon: "◎" },
-  { href: "/facturas", label: "Facturas", icon: "≡" },
-  { href: "/tareas", label: "Tareas", icon: "☑" },
-  { href: "/comisiones", label: "Comisiones", icon: "◈" },
+type NavItemDef = { href: string; label: string; icon: React.ReactNode; exact?: boolean };
+
+const icon = (Icon: React.ElementType) => <Icon className="w-4 h-4 flex-none" />;
+
+const nav: NavItemDef[] = [
+  { href: "/dashboard", label: "Dashboard", icon: icon(LayoutDashboard), exact: true },
+  { href: "/pipeline", label: "Pipeline", icon: icon(Kanban) },
+  { href: "/leads", label: "Leads", icon: icon(UserPlus) },
+  { href: "/facturas", label: "Facturas", icon: icon(ReceiptText) },
+  { href: "/tareas", label: "Tareas", icon: icon(ListChecks) },
+  { href: "/comisiones", label: "Comisiones", icon: icon(BadgePercent) },
 ];
 
-const mobileNav = [
-  { href: "/pipeline", label: "Pipeline", icon: "⬡" },
-  { href: "/leads", label: "Leads", icon: "◎" },
-  { href: "/facturas", label: "Facturas", icon: "≡" },
-  { href: "/tareas", label: "Tareas", icon: "☑" },
+const mobileNav: NavItemDef[] = [
+  { href: "/pipeline", label: "Pipeline", icon: icon(Kanban) },
+  { href: "/leads", label: "Leads", icon: icon(UserPlus) },
+  { href: "/facturas", label: "Facturas", icon: icon(ReceiptText) },
+  { href: "/tareas", label: "Tareas", icon: icon(ListChecks) },
 ];
 
-const mobileMore = [
-  { href: "/comisiones", label: "Comisiones", icon: "◈" },
-  { href: "/marketing", label: "Marketing", icon: "✦" },
-  { href: "/ai", label: "Edrin AI", icon: "✧" },
-  { href: "/presupuesto", label: "Presupuesto", icon: "📊" },
-  { href: "/metricas", label: "Métricas", icon: "📈" },
-  { href: "/workflow", label: "Workflow", icon: "⟳" },
-  { href: "/seguridad", label: "Seguridad", icon: "🔒" },
+const adminNav: NavItemDef[] = [
+  { href: "/ajustes/agencia", label: "Mi Agencia", icon: icon(Building2) },
+  { href: "/ajustes/usuarios", label: "Usuarios", icon: icon(UsersRound) },
+  { href: "/ajustes/pipeline", label: "Etapas pipeline", icon: icon(Layers) },
+  { href: "/ajustes/metodos-pago", label: "Métodos de pago", icon: icon(CreditCard) },
+  { href: "/ajustes/comisiones", label: "Comisiones", icon: icon(BadgePercent) },
+  { href: "/ajustes/terminos", label: "Términos", icon: icon(FileText) },
+  { href: "/ajustes/integraciones", label: "Integraciones", icon: icon(Plug) },
 ];
 
-const adminNav = [
-  { href: "/ajustes/agencia", label: "Mi Agencia", icon: "🏢" },
-  { href: "/ajustes/usuarios", label: "Usuarios", icon: "👥" },
-  { href: "/ajustes/pipeline", label: "Etapas pipeline", icon: "◧" },
-  { href: "/ajustes/metodos-pago", label: "Métodos de pago", icon: "💳" },
-  { href: "/ajustes/comisiones", label: "Comisiones", icon: "◩" },
-  { href: "/ajustes/terminos", label: "Términos", icon: "◪" },
-  { href: "/ajustes/integraciones", label: "Integraciones", icon: "⟴" },
-];
-
-function NavItem({ href, label, icon, exact = false }: { href: string; label: string; icon: string; exact?: boolean }) {
+function NavItem({
+  href,
+  label,
+  icon,
+  exact = false,
+}: {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  exact?: boolean;
+}) {
   const pathname = usePathname();
-  const active = exact ? pathname === href : (pathname === href || pathname.startsWith(href + "/"));
+  const active = exact
+    ? pathname === href
+    : pathname === href || pathname.startsWith(href + "/");
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
+      className="flex items-center gap-[11px] px-3 py-2 rounded-[9px] text-sm font-medium transition-all duration-150"
       style={{
-        color: active ? "var(--brand)" : "var(--sidebar-text)",
+        color: active ? "var(--brand)" : "var(--muted)",
         background: active ? "var(--brand-light)" : "transparent",
         fontWeight: active ? 600 : 400,
       }}
+      onMouseEnter={(e) => {
+        if (!active) (e.currentTarget as HTMLElement).style.background = "var(--surface-2)";
+      }}
+      onMouseLeave={(e) => {
+        if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
+      }}
     >
-      <span className="text-base leading-none w-5 text-center">{icon}</span>
+      {icon}
       <span className="truncate">{label}</span>
     </Link>
+  );
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div
+      className="px-3 pt-4 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider"
+      style={{ color: "#C4C4C4" }}
+    >
+      {label}
+    </div>
   );
 }
 
@@ -99,53 +153,53 @@ export default function Sidebar({ agency }: { agency?: Agency }) {
             )}
             <div>
               <div className="font-bold text-sm leading-tight" style={{ color: "var(--text)" }}>{agencyName}</div>
-              <div className="text-xs" style={{ color: "var(--sidebar-text)" }}>CRM</div>
+              <div className="text-xs" style={{ color: "var(--muted)" }}>CRM</div>
             </div>
           </div>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 px-2 py-3 overflow-y-auto space-y-0.5">
-          <div className="text-xs font-semibold uppercase tracking-wider px-3 py-1.5 mb-1" style={{ color: "#C4C4C4" }}>
+          <div
+            className="px-3 py-1.5 mb-1 text-[10.5px] font-bold uppercase tracking-wider"
+            style={{ color: "#C4C4C4" }}
+          >
             Principal
           </div>
-          {nav.map((item) => <NavItem key={item.href} {...item} />)}
+          {nav.map((item) => (
+            <NavItem key={item.href} {...item} />
+          ))}
 
-          <div className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1.5" style={{ color: "#C4C4C4" }}>
-            Marketing & AI
-          </div>
-          <NavItem href="/marketing" label="Hub Marketing" icon="✦" exact />
-          <NavItem href="/marketing/calendario" label="Calendario" icon="▦" />
-          <NavItem href="/marketing/biblioteca" label="Biblioteca" icon="▣" />
-          <NavItem href="/marketing/automatizaciones" label="Automatizaciones" icon="⟳" />
-          <NavItem href="/marketing/campanas" label="Campañas" icon="◉" />
-          <NavItem href="/marketing/reportes" label="Reportes" icon="◳" />
-          <NavItem href="/ai" label="Edrin AI" icon="✧" />
+          <SectionHeader label="Marketing & AI" />
+          <NavItem href="/marketing" label="Hub Marketing" icon={icon(Megaphone)} exact />
+          <NavItem href="/marketing/calendario" label="Calendario" icon={icon(CalendarDays)} />
+          <NavItem href="/marketing/biblioteca" label="Biblioteca" icon={icon(Library)} />
+          <NavItem href="/marketing/automatizaciones" label="Automatizaciones" icon={icon(Zap)} />
+          <NavItem href="/marketing/campanas" label="Campañas" icon={icon(Send)} />
+          <NavItem href="/marketing/reportes" label="Reportes" icon={icon(BarChart3)} />
+          <NavItem href="/ai" label="Edrin AI" icon={icon(Sparkles)} />
 
-          <div className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1.5" style={{ color: "#C4C4C4" }}>
-            Análisis
-          </div>
-          <NavItem href="/presupuesto" label="Presupuesto" icon="📊" />
-          <NavItem href="/metricas" label="Métricas" icon="📈" />
-          <NavItem href="/workflow" label="Workflow visual" icon="⟳" />
-          <NavItem href="/seguridad" label="Seguridad" icon="🔒" />
+          <SectionHeader label="Análisis" />
+          <NavItem href="/presupuesto" label="Presupuesto" icon={icon(Wallet)} />
+          <NavItem href="/metricas" label="Métricas" icon={icon(TrendingUp)} />
+          <NavItem href="/workflow" label="Workflow visual" icon={icon(GitBranch)} />
+          <NavItem href="/seguridad" label="Seguridad" icon={icon(Shield)} />
 
           {isAdmin && (
             <>
-              <div className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1.5" style={{ color: "#C4C4C4" }}>
-                Admin
-              </div>
-              {adminNav.map((item) => <NavItem key={item.href} {...item} />)}
-              <NavItem href="/importar" label="Importar datos" icon="📥" />
+              <SectionHeader label="Admin" />
+              {adminNav.map((item) => (
+                <NavItem key={item.href} {...item} />
+              ))}
+              <NavItem href="/importar" label="Importar datos" icon={icon(Upload)} />
             </>
           )}
 
           {isSuperAdmin && (
             <>
-              <div className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1.5" style={{ color: "#C4C4C4" }}>
-                Plataforma
-              </div>
-              <NavItem href="/superadmin" label="Gestión agencias" icon="🌐" />
+              <SectionHeader label="Plataforma" />
+              <NavItem href="/superadmin" label="Gestión agencias" icon={icon(Globe)} />
+              <NavItem href="/tecnico" label="Panel técnico" icon={icon(Wrench)} />
             </>
           )}
         </nav>
@@ -154,14 +208,18 @@ export default function Sidebar({ agency }: { agency?: Agency }) {
         <div className="px-2 pb-4 border-t space-y-1 pt-3" style={{ borderColor: "var(--sidebar-border)" }}>
           <button
             onClick={toggle}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
-            style={{ color: "var(--sidebar-text)" }}
+            className="w-full flex items-center gap-[11px] px-3 py-2 rounded-[9px] text-sm transition-all"
+            style={{ color: "var(--muted)" }}
           >
-            <span>{theme === "dark" ? "☀️" : "🌙"}</span>
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4 flex-none" />
+            ) : (
+              <Moon className="w-4 h-4 flex-none" />
+            )}
             <span>{theme === "dark" ? "Modo claro" : "Modo oscuro"}</span>
           </button>
 
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg" style={{ background: "var(--bg)" }}>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-[9px]" style={{ background: "var(--surface-2)" }}>
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
               style={{ background: "var(--brand)" }}
@@ -170,17 +228,17 @@ export default function Sidebar({ agency }: { agency?: Agency }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{userName}</div>
-              <div className="text-xs truncate" style={{ color: "var(--sidebar-text)" }}>
+              <div className="text-xs truncate" style={{ color: "var(--muted)" }}>
                 {userRole ?? ""}
               </div>
             </div>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="text-sm transition hover:opacity-70"
-              style={{ color: "var(--sidebar-text)" }}
+              className="transition hover:opacity-70"
+              style={{ color: "var(--muted)" }}
               title="Cerrar sesión"
             >
-              ⏻
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -196,17 +254,18 @@ export default function Sidebar({ agency }: { agency?: Agency }) {
         }}
       >
         {mobileNav.map((item) => {
-          const active = item.href === "/marketing"
-            ? pathname === "/marketing" || pathname.startsWith("/marketing")
-            : pathname === item.href || pathname.startsWith(item.href + "/");
+          const active =
+            item.href === "/marketing"
+              ? pathname === "/marketing" || pathname.startsWith("/marketing")
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}
               href={item.href}
               className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-medium transition-all"
-              style={{ color: active ? "var(--brand)" : "var(--sidebar-text)" }}
+              style={{ color: active ? "var(--brand)" : "var(--muted)" }}
             >
-              <span className="text-lg leading-none">{item.icon}</span>
+              {item.icon}
               <span className="text-[10px]">{item.label}</span>
             </Link>
           );

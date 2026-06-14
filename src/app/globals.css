@@ -1,28 +1,76 @@
 @import "tailwindcss";
 
 :root {
+  /* Brand */
   --brand: #E8610A;
-  --brand-dark: #c94f08;
+  --brand-dark: #C94F08;
   --brand-light: #FFF4EE;
+  --brand-100: #FCE3D2;
+
+  /* Cool (teal) */
+  --cool: #0E9384;
+  --cool-dark: #0B7468;
+  --cool-light: #E6F6F3;
+  --cool-100: #CDEDE8;
+
+  /* Backgrounds & surfaces */
   --bg: #F4F6FA;
-  --surface: #ffffff;
+  --surface: #FFFFFF;
   --surface-2: #FAFBFC;
+
+  /* Borders */
   --border: #EAECF0;
   --border-light: #F2F4F7;
+
+  /* Text */
   --text: #101828;
   --text-muted: #667085;
   --text-subtle: #98A2B3;
+  --muted: #667085;
+  --subtle: #98A2B3;
+
+  /* Sidebar (light mode) */
   --sidebar-bg: #ffffff;
   --sidebar-text: #667085;
   --sidebar-active: #E8610A;
   --sidebar-border: #F2F4F7;
-  --shadow-sm: 0 1px 2px 0 rgba(16,24,40,0.05);
-  --shadow: 0 4px 8px -2px rgba(16,24,40,0.1), 0 2px 4px -2px rgba(16,24,40,0.06);
-  --shadow-lg: 0 12px 24px -4px rgba(16,24,40,0.12), 0 4px 8px -2px rgba(16,24,40,0.08);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(16,24,40,.05);
+  --shadow: 0 4px 8px -2px rgba(16,24,40,.10), 0 2px 4px -2px rgba(16,24,40,.06);
+  --shadow-lg: 0 16px 40px -12px rgba(16,24,40,.20), 0 4px 8px -2px rgba(16,24,40,.06);
+
+  /* Radii */
   --radius: 12px;
   --radius-sm: 8px;
   --radius-lg: 16px;
   --radius-xl: 20px;
+  --r: 12px;
+  --r-sm: 8px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+
+  /* Pipeline stage colors */
+  --st-nuevo: #6B7280;
+  --st-cotiza: #3B82F6;
+  --st-negoc: #F59E0B;
+  --st-reserva: #10B981;
+  --st-completo: #8B5CF6;
+  --st-lover: #E8610A;
+
+  /* Channel colors */
+  --c-wa: #25D366;
+  --c-ig: #E1306C;
+  --c-tt: #111114;
+  --c-msg: #0084FF;
+  --c-dir: #6B7280;
+
+  /* Dark sidebar (superadmin) */
+  --nav: #141B2D;
+  --nav-2: #1C2740;
+  --nav-line: #2A3654;
+  --nav-text: #9FB0CE;
+  --nav-muted: #647396;
 }
 
 .dark {
@@ -34,13 +82,36 @@
   --text: #F2F4F7;
   --text-muted: #98A2B3;
   --text-subtle: #667085;
+  --muted: #98A2B3;
+  --subtle: #667085;
   --sidebar-bg: #1A1D23;
   --sidebar-text: #98A2B3;
   --sidebar-active: #E8610A;
   --sidebar-border: #2D3139;
   --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.3);
   --shadow: 0 4px 8px -2px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3);
-  --shadow-lg: 0 12px 24px -4px rgba(0,0,0,0.5), 0 4px 8px -2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 16px 40px -12px rgba(0,0,0,0.5), 0 4px 8px -2px rgba(0,0,0,0.3);
+
+  /* Cool (unchanged in dark) */
+  --cool: #0E9384;
+  --cool-dark: #0B7468;
+  --cool-light: #E6F6F3;
+  --cool-100: #CDEDE8;
+
+  /* Pipeline stage colors (unchanged in dark) */
+  --st-nuevo: #6B7280;
+  --st-cotiza: #3B82F6;
+  --st-negoc: #F59E0B;
+  --st-reserva: #10B981;
+  --st-completo: #8B5CF6;
+  --st-lover: #E8610A;
+
+  /* Channel colors (unchanged in dark) */
+  --c-wa: #25D366;
+  --c-ig: #E1306C;
+  --c-tt: #111114;
+  --c-msg: #0084FF;
+  --c-dir: #6B7280;
 }
 
 * { box-sizing: border-box; }
@@ -143,3 +214,8 @@ a, button { transition: background 0.15s, color 0.15s, opacity 0.15s, box-shadow
   .grid-cols-5,
   .grid-cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 }
+
+/* Shadow utilities */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow    { box-shadow: var(--shadow); }
+.shadow-lg { box-shadow: var(--shadow-lg); }

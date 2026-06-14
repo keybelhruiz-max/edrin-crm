@@ -28,7 +28,7 @@ export default function BibliotecaPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/marketing/assets").then(r => r.json()).then(setAssets).catch(() => {});
+    fetch("/api/marketing/assets").then(r => r.json()).then((d) => setAssets(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const filtered = assets.filter(a => {

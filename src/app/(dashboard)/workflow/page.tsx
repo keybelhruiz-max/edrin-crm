@@ -88,7 +88,7 @@ export default function WorkflowPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const load = () =>
-    fetch("/api/workflows").then((r) => r.json()).then(setFlows);
+    fetch("/api/workflows").then((r) => r.json()).then((d) => setFlows(Array.isArray(d) ? d : []));
   useEffect(() => { load(); }, []);
 
   const openFlow = (flow: WFDef) => {

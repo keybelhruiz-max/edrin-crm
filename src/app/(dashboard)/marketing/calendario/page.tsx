@@ -43,7 +43,7 @@ export default function CalendarioPage() {
 
   useEffect(() => {
     fetch(`/api/marketing/posts?month=${monthStr}`)
-      .then(r => r.json()).then(setPosts).catch(() => {});
+      .then(r => r.json()).then((d) => setPosts(Array.isArray(d) ? d : [])).catch(() => {});
   }, [monthStr]);
 
   async function save() {

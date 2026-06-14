@@ -53,7 +53,7 @@ export default function MetricasPage() {
     setLoading(true);
     fetch(`/api/metrics?month=${month}`)
       .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); });
+      .then((d) => { setData(d && typeof d === "object" && !d.error ? d : null); setLoading(false); });
   }, [month]);
 
   const maxRevenue = Math.max(...(data?.scorecard.map((u) => u.revenue) ?? [1]), 1);

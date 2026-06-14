@@ -51,7 +51,7 @@ export default function ReportesPage() {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/marketing/reports?type=${type}&month=${month}`)
-      .then(r => r.json()).then(setData).catch(() => {}).finally(() => setLoading(false));
+      .then(r => r.json()).then((d) => setData(d && typeof d === "object" && !d.error ? d : {})).catch(() => {}).finally(() => setLoading(false));
   }, [type, month]);
 
   function prevMonth() {

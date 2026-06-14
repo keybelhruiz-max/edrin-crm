@@ -27,7 +27,7 @@ export default function AIPage() {
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   useEffect(() => {
-    fetch("/api/ai/chat").then(r => r.json()).then(setHistory).catch(() => {});
+    fetch("/api/ai/chat").then(r => r.json()).then((d) => setHistory(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   async function send(text?: string) {
@@ -46,7 +46,7 @@ export default function AIPage() {
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
       setConvId(data.conversationId);
       // refresh history
-      fetch("/api/ai/chat").then(r => r.json()).then(setHistory).catch(() => {});
+      fetch("/api/ai/chat").then(r => r.json()).then((d) => setHistory(Array.isArray(d) ? d : [])).catch(() => {});
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Error al conectar con Edrin AI. Verifica la configuración de API." }]);
     } finally {

@@ -55,9 +55,9 @@ export default function MarketingPage() {
 
   useEffect(() => {
     fetch(`/api/marketing/reports?type=commercial&month=${month}`)
-      .then(r => r.json()).then(setReport).catch(() => {});
+      .then(r => r.json()).then((d) => setReport(d && typeof d === "object" && !d.error ? d : {})).catch(() => {});
     fetch("/api/marketing/campaigns")
-      .then(r => r.json()).then(setCampaigns).catch(() => {});
+      .then(r => r.json()).then((d) => setCampaigns(Array.isArray(d) ? d : [])).catch(() => {});
   }, [month]);
 
   const totalSpent = campaigns.reduce((s, c) => s + c.spent, 0);

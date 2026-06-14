@@ -44,7 +44,7 @@ export default function CampanasPage() {
   const [selected, setSelected] = useState<Campaign | null>(null);
 
   useEffect(() => {
-    fetch("/api/marketing/campaigns").then(r => r.json()).then(setCampaigns).catch(() => {});
+    fetch("/api/marketing/campaigns").then(r => r.json()).then((d) => setCampaigns(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const filtered = filter === "all" ? campaigns : campaigns.filter(c => c.status === filter);

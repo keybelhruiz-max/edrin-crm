@@ -37,7 +37,7 @@ export default function PresupuestoPage() {
     setLoading(true);
     fetch(`/api/budget?year=${year}`)
       .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); });
+      .then((d) => { setData(d && typeof d === "object" && !d.error ? d : null); setLoading(false); });
   }, [year]);
 
   useEffect(() => { load(); }, [load]);

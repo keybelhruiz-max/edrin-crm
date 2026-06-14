@@ -84,7 +84,7 @@ export default function AutomatizacionesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/marketing/automations").then(r => r.json()).then(setRules).catch(() => {});
+    fetch("/api/marketing/automations").then(r => r.json()).then((d) => setRules(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   async function toggleRule(id: string, active: boolean) {

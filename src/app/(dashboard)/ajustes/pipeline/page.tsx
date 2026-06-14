@@ -87,7 +87,7 @@ export default function PipelineSettingsPage() {
   useEffect(() => {
     fetch("/api/pipeline-stages")
       .then((r) => r.json())
-      .then(setStages);
+      .then((d) => setStages(Array.isArray(d) ? d : []));
   }, []);
 
   function handleDragEnd(event: DragEndEvent) {

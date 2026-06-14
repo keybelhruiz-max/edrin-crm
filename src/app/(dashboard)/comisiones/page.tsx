@@ -38,7 +38,8 @@ export default function ComisionesPage() {
     if (role !== "ADMIN") params.set("userId", userId ?? "");
     fetch(`/api/commissions?${params}`)
       .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); });
+      .then((d) => { setData(Array.isArray(d) ? d : []); setLoading(false); })
+      .catch(() => { setData([]); setLoading(false); });
   }, [month, role, userId]);
 
   const totalBilledAll = data.reduce((s, d) => s + d.totalBilled, 0);

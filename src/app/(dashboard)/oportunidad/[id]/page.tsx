@@ -330,7 +330,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
       if (oppData.contact?.id) {
         fetch(`/api/interactions?contactId=${oppData.contact.id}`)
           .then(r => r.ok ? r.json() : [])
-          .then(setInteractions);
+          .then((d) => setInteractions(Array.isArray(d) ? d : []));
       }
     });
   }, [id]);

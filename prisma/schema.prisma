@@ -730,3 +730,73 @@ model LoginAttempt {
 
   @@index([email, createdAt])
 }
+
+// ─── Apero Studio (sitio público de portafolio) ──────────────────────────────
+
+enum StudioMediaType {
+  IMAGE
+  VIDEO
+}
+
+model StudioProfile {
+  id           String   @id @default(cuid())
+  name         String   @default("Keybelh Ruiz")
+  role         String   @default("Diseñador & Creador Digital")
+  tagline      String?
+  bio          String?
+  avatarUrl    String?
+  heroImageUrl String?
+  email        String?
+  phone        String?
+  instagram    String?
+  updatedAt    DateTime @updatedAt
+}
+
+model PortfolioItem {
+  id           String          @id @default(cuid())
+  title        String
+  description  String?
+  category     String          @default("Branding")
+  mediaType    StudioMediaType @default(IMAGE)
+  mediaUrl     String
+  thumbnailUrl String?
+  order        Int             @default(0)
+  published    Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model StudioClient {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  passwordHash String
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  galleryItems StudioGalleryItem[]
+}
+
+model StudioGalleryItem {
+  id        String          @id @default(cuid())
+  clientId  String
+  client    StudioClient    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  mediaType StudioMediaType @default(IMAGE)
+  size      Int?
+  order     Int             @default(0)
+  createdAt DateTime        @default(now())
+}
+
+model StudioLinkItem {
+  id        String   @id @default(cuid())
+  title     String
+  url       String
+  icon      String?
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
